@@ -36,6 +36,12 @@ export default function Navbar() {
             How It Works
           </a>
           <Link
+            href="/blog"
+            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors"
+          >
+            Guides
+          </Link>
+          <Link
             href="/payment"
             className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors"
           >

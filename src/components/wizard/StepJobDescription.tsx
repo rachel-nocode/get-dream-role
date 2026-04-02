@@ -48,7 +48,7 @@ export default function StepJobDescription({
             value={jobTitle}
             onChange={(e) => onJobTitleChange(e.target.value)}
             placeholder="e.g. Senior Frontend Engineer"
-            className="w-full rounded-xl border border-forge-border bg-forge-surface px-4 py-3 text-sm text-forge-text placeholder:text-forge-muted/50 transition-colors focus:border-forge-accent focus:outline-none focus:ring-1 focus:ring-forge-accent/20"
+            className="w-full rounded-xl border border-forge-border bg-forge-surface px-4 py-3 text-sm text-forge-text placeholder:text-forge-muted transition-colors focus:border-forge-accent focus:outline-none focus:ring-1 focus:ring-forge-accent/20"
           />
         </div>
 
@@ -68,7 +68,7 @@ export default function StepJobDescription({
               placeholder="Paste the full job description here..."
               rows={14}
               className={clsx(
-                "w-full resize-y rounded-xl border bg-forge-surface px-4 py-3 text-sm leading-relaxed text-forge-text placeholder:text-forge-muted/50 transition-colors focus:outline-none focus:ring-1",
+                "w-full resize-y rounded-xl border bg-forge-surface px-4 py-3 text-sm leading-relaxed text-forge-text placeholder:text-forge-muted transition-colors focus:outline-none focus:ring-1",
                 isTooShort
                   ? "border-forge-warning focus:border-forge-warning focus:ring-forge-warning/20"
                   : "border-forge-border focus:border-forge-accent focus:ring-forge-accent/20",
@@ -80,7 +80,7 @@ export default function StepJobDescription({
             <span
               className={clsx(
                 "absolute right-3 bottom-3 text-xs",
-                isTooShort ? "text-forge-warning" : "text-forge-muted/60",
+                isTooShort ? "text-forge-warning" : "text-forge-muted",
               )}
             >
               {charCount.toLocaleString()} chars

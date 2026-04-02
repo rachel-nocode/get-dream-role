@@ -101,7 +101,7 @@ export default function Hero() {
             {/* Before/After */}
             <div className="border-t border-forge-border pt-4 flex flex-col gap-1">
               <p className="text-sm text-forge-muted">
-                <span className="text-forge-muted/60">Before:</span> Worked on
+                <span className="text-forge-muted">Before:</span> Worked on
                 projects
               </p>
               <p className="text-sm text-forge-text">

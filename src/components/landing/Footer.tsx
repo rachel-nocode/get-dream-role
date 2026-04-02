@@ -11,6 +11,9 @@ export default function Footer() {
         </div>
 
         <div className="flex items-center gap-6 text-sm text-forge-muted">
+          <Link href="/blog" className="hover:text-forge-text transition-colors">
+            Guides
+          </Link>
           <Link href="/privacy" className="hover:text-forge-text transition-colors">
             Privacy
           </Link>
