@@ -128,6 +128,7 @@ export function useWizardState() {
 
   return {
     state,
+    hydrated,
     isAnalyzing,
     setIsAnalyzing,
     error,

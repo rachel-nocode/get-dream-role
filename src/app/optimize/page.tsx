@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2, Zap } from "lucide-react";
 import clsx from "clsx";
 
 import { useWizardState, clearWizardStorage } from "@/hooks/useWizardState";
+import { ATS_OPTIONS, ATSTarget } from "@/lib/types";
 import StepProgress from "@/components/wizard/StepProgress";
 import StepATS from "@/components/wizard/StepATS";
 import StepJobDescription from "@/components/wizard/StepJobDescription";
@@ -28,10 +29,13 @@ const stepVariants = {
 
 function OptimizePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPaymentGate, setShowPaymentGate] = useState(false);
+  const urlParamApplied = useRef(false);
 
   const {
     state,
+    hydrated,
     isAnalyzing,
     error,
     setError,
@@ -47,6 +51,20 @@ function OptimizePageInner() {
   } = useWizardState();
 
   const direction = 1;
+
+  // Pre-select ATS from ?ats= URL param (e.g. from platform landing pages)
+  useEffect(() => {
+    if (hydrated && !urlParamApplied.current) {
+      urlParamApplied.current = true;
+      if (state.atsTarget === null) {
+        const atsParam = searchParams.get("ats") as ATSTarget | null;
+        if (atsParam && ATS_OPTIONS.some((o) => o.id === atsParam)) {
+          setAtsTarget(atsParam);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   const isPaid = useCallback(() => {
     try {

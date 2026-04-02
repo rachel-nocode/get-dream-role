@@ -14,6 +14,9 @@ export default function Footer() {
           <Link href="/blog" className="hover:text-forge-text transition-colors">
             Guides
           </Link>
+          <Link href="/ats" className="hover:text-forge-text transition-colors">
+            Platforms
+          </Link>
           <Link href="/privacy" className="hover:text-forge-text transition-colors">
             Privacy
           </Link>
