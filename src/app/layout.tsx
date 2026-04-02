@@ -16,9 +16,27 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "GetDreamRole",
+  title: {
+    default: "GetDreamRole — AI Resume Optimizer for ATS",
+    template: "%s | GetDreamRole",
+  },
   description:
-    "Optimize your resume for any ATS platform in minutes. Upload your resume, paste the job description, and get AI-powered rewrites that get you past the filters and in front of recruiters.",
+    "AI-powered resume optimizer built for Greenhouse, Lever, Workday & 10+ ATS platforms. Upload your resume, paste the job description, and get rewrites that pass the filters. One-time $9.99.",
+  metadataBase: new URL("https://www.getdreamrole.com"),
+  openGraph: {
+    type: "website",
+    url: "https://www.getdreamrole.com",
+    siteName: "GetDreamRole",
+    title: "GetDreamRole — AI Resume Optimizer for ATS",
+    description:
+      "AI-powered resume optimizer built for Greenhouse, Lever, Workday & 10+ ATS platforms. Upload your resume, paste the job description, and get rewrites that pass the filters. One-time $9.99.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GetDreamRole — AI Resume Optimizer for ATS",
+    description:
+      "AI-powered resume optimizer for Greenhouse, Lever, Workday & more. Paste the job description, get AI rewrites that beat ATS filters. One-time $9.99.",
+  },
 };
 
 export default function RootLayout({
