@@ -1,12 +1,21 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/landing/Navbar";
+import StructuredData from "@/components/seo/StructuredData";
+import { buildMetadata, buildWebPageSchema } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "ATS Platform Support",
   description:
-    "GetDreamRole is optimized for Greenhouse, Lever, Workday, iCIMS, Taleo, and more. Choose your target ATS and get a resume tuned to how that platform scores candidates.",
-};
+    "Choose the ATS the company uses and get resume guidance tuned to Greenhouse, Lever, Workday, iCIMS, Taleo, and other applicant tracking systems.",
+  path: "/ats",
+  keywords: [
+    "ATS platforms",
+    "Greenhouse vs Workday ATS",
+    "resume ATS guides",
+    "applicant tracking system help",
+  ],
+});
 
 const platforms = [
   {
@@ -68,6 +77,15 @@ const platforms = [
 export default function AtsHubPage() {
   return (
     <>
+      <StructuredData
+        data={buildWebPageSchema({
+          title: "ATS Platform Support",
+          description:
+            "A hub page for Greenhouse, Lever, Workday, iCIMS, Taleo, and other ATS-specific resume guides.",
+          path: "/ats",
+          keywords: ["ATS platforms", "resume ATS guides", "ATS comparison"],
+        })}
+      />
       <Navbar />
       <main className="max-w-4xl mx-auto px-6 py-24">
         <p className="text-forge-accent text-xs tracking-[0.18em] uppercase font-display">

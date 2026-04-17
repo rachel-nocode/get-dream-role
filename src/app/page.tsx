@@ -5,6 +5,27 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import ResultsPreview from "@/components/landing/ResultsPreview";
 import Benefits from "@/components/landing/Benefits";
 import FinalCTA from "@/components/landing/FinalCTA";
+import GuideHighlights from "@/components/landing/GuideHighlights";
+import StructuredData from "@/components/seo/StructuredData";
+import {
+  buildMetadata,
+  buildSoftwareApplicationSchema,
+  buildWebPageSchema,
+} from "@/lib/seo";
+
+export const metadata = buildMetadata({
+  title: "AI Resume Optimizer for Greenhouse, Workday, Lever and More",
+  description:
+    "Optimize your resume for the ATS the company actually uses. GetDreamRole helps job seekers rewrite resumes for Greenhouse, Lever, Workday, iCIMS, Taleo, and more.",
+  path: "/",
+  keywords: [
+    "ATS resume optimizer",
+    "resume optimization tool",
+    "Greenhouse resume tips",
+    "Workday resume format",
+    "resume ATS checker",
+  ],
+});
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -45,19 +66,43 @@ const faqSchema = {
   ],
 };
 
+const homepageSchemas = [
+  buildWebPageSchema({
+    title: "GetDreamRole - AI Resume Optimizer for ATS",
+    description:
+      "Optimize your resume for the ATS the company actually uses, then turn job descriptions into cleaner, more targeted resume bullets.",
+    path: "/",
+    keywords: [
+      "ATS resume optimizer",
+      "resume ATS checker",
+      "resume optimization",
+    ],
+  }),
+  buildSoftwareApplicationSchema({
+    title: "GetDreamRole Resume Optimizer",
+    description:
+      "A web app that helps job seekers optimize resumes for Greenhouse, Workday, Lever, iCIMS, Taleo, and other ATS platforms.",
+    path: "/optimize",
+    keywords: [
+      "ATS resume optimizer",
+      "resume ATS checker",
+      "resume optimization tool",
+    ],
+  }),
+  faqSchema,
+];
+
 export default function Home() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+      <StructuredData data={homepageSchemas} />
       <Navbar />
       <main>
         <Hero />
         <Features />
         <HowItWorks />
         <ResultsPreview />
+        <GuideHighlights />
         <Benefits />
         <FinalCTA />
       </main>

@@ -1,270 +1,148 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import Navbar from "@/components/landing/Navbar";
+import GuideArticleShell from "@/components/blog/GuideArticleShell";
+import GuideCta from "@/components/blog/GuideCta";
+import StructuredData from "@/components/seo/StructuredData";
+import { getBlogPost } from "@/lib/blog-posts";
+import { buildBlogPostingSchema, buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "What Is an ATS Resume Optimizer? Complete Guide for 2026",
-  description:
-    "ATS software rejects 75% of resumes before a human reads them. This guide explains how optimizers work, what to look for, and how to use one effectively.",
-};
+const post = getBlogPost("ats-resume-optimizer-guide")!;
+
+export const metadata: Metadata = buildMetadata({
+  title: post.title,
+  description: post.description,
+  path: `/blog/${post.slug}`,
+  keywords: post.keywords,
+  type: "article",
+});
+
+const schema = buildBlogPostingSchema({
+  title: post.title,
+  description: post.description,
+  path: `/blog/${post.slug}`,
+  keywords: post.keywords,
+  datePublished: post.date,
+});
 
 export default function AtsOptimizerGuidePost() {
   return (
     <>
-      <Navbar />
-      <main className="max-w-2xl mx-auto px-6 py-20">
-        <Link
-          href="/blog"
-          className="inline-flex items-center gap-1.5 text-sm text-forge-muted hover:text-forge-text transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          All guides
-        </Link>
+      <StructuredData data={schema} />
+      <GuideArticleShell post={post} eyebrow={post.category}>
+        <p>
+          An ATS resume optimizer helps you compare your resume against a real
+          job description before you apply. That matters because most hiring
+          pipelines do not start with a human reading your PDF. They start with
+          software parsing it, matching it, and deciding whether it looks strong
+          enough to surface to recruiting.
+        </p>
+        <p>
+          The useful question is not “does ATS exist?” It is “what kind of
+          optimizer gives me a better shot at this specific application?” The
+          answer is usually a tool that combines keyword matching, formatting
+          checks, and ATS-specific guidance for systems like{" "}
+          <Link href="/ats/greenhouse" className="text-forge-text underline underline-offset-2">
+            Greenhouse
+          </Link>
+          ,{" "}
+          <Link href="/ats/workday" className="text-forge-text underline underline-offset-2">
+            Workday
+          </Link>
+          , and{" "}
+          <Link href="/ats/lever" className="text-forge-text underline underline-offset-2">
+            Lever
+          </Link>
+          .
+        </p>
 
-        <div className="mt-10">
-          <p className="text-forge-accent text-xs tracking-[0.18em] uppercase font-display">
-            Getting Started
+        <GuideCta
+          title="Try an optimizer on a real job description"
+          description="Upload the resume you already have, paste the job description, and get ATS-specific rewrite suggestions instead of vague advice."
+          href="/optimize"
+          label="Optimize my resume now"
+        />
+
+        <section>
+          <h2 className="mb-4 font-display text-xl font-semibold text-forge-text">
+            What a good ATS optimizer actually checks
+          </h2>
+          <ul className="space-y-3">
+            {[
+              "Whether your resume can be parsed cleanly by the target ATS",
+              "Which required skills or phrases are missing from the resume",
+              "Whether your experience bullets prove those skills clearly enough",
+              "How well the structure, dates, and section names support recruiter search",
+            ].map((item) => (
+              <li key={item} className="flex gap-3">
+                <span className="mt-0.5 shrink-0 text-forge-accent">→</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4">
+            A weak optimizer only counts keywords. A better one helps you fix
+            the actual document. A strong one knows that a Workday resume needs
+            different handling than a Lever resume.
           </p>
-          <h1 className="mt-3 font-display text-3xl md:text-4xl font-bold text-forge-text leading-tight">
-            What Is an ATS Resume Optimizer? Complete Guide for 2026
-          </h1>
-          <div className="mt-4 flex items-center gap-4 text-xs text-forge-muted">
-            <span>April 2, 2026</span>
-            <span>6 min read</span>
-          </div>
-        </div>
+        </section>
 
-        <div className="mt-12 space-y-8 text-forge-muted leading-relaxed">
+        <section>
+          <h2 className="mb-4 font-display text-xl font-semibold text-forge-text">
+            What separates a useful tool from a generic AI rewrite
+          </h2>
           <p>
-            Most job applications are rejected before a recruiter ever reads
-            them. The culprit is an Applicant Tracking System (ATS) — software
-            that parses, scores, and filters resumes at scale, often before any
-            human involvement. Estimates put the rejection rate at 70–75% at
-            this stage.
+            General-purpose AI tools can make your bullets sound smoother, but
+            they usually do not know whether the company is using a strict ATS
+            parser or a more flexible one. That is why platform-specific guides
+            like the{" "}
+            <Link href="/blog/optimize-resume-workday-ats" className="text-forge-text underline underline-offset-2">
+              Workday ATS guide
+            </Link>{" "}
+            and the{" "}
+            <Link href="/blog/optimize-resume-greenhouse-ats" className="text-forge-text underline underline-offset-2">
+              Greenhouse ATS guide
+            </Link>{" "}
+            matter. The same resume can perform differently in each system.
           </p>
-          <p>
-            An ATS resume optimizer is a tool that analyzes your resume against
-            a specific job description and suggests changes to improve your
-            match score. This guide covers how they work, what separates a good
-            one from a mediocre one, and how to use one without making your
-            resume sound like a keyword list.
+        </section>
+
+        <GuideCta
+          title="Get ATS-specific rewrite help instead of guesswork"
+          description="Choose the target ATS, then let GetDreamRole rewrite low-signal bullets with the right keywords and cleaner structure."
+          href="/optimize"
+          label="Start optimizing for ATS"
+        />
+
+        <section>
+          <h2 className="mb-4 font-display text-xl font-semibold text-forge-text">
+            When to use an optimizer
+          </h2>
+          <ol className="list-inside list-decimal space-y-2">
+            <li>When you already have a target role and job description.</li>
+            <li>When your resume is broadly good but not tailored enough.</li>
+            <li>When you keep getting no response from ATS-heavy companies.</li>
+            <li>When you need a quick rewrite without losing your real experience.</li>
+          </ol>
+          <p className="mt-4">
+            If your main concern is resume layout, pair this guide with the{" "}
+            <Link href="/blog/ats-friendly-resume-format" className="text-forge-text underline underline-offset-2">
+              ATS-friendly resume format guide
+            </Link>
+            . If the problem is silent rejection, read{" "}
+            <Link href="/blog/why-qualified-candidates-get-rejected-by-ats" className="text-forge-text underline underline-offset-2">
+              why qualified candidates still get rejected by ATS
+            </Link>
+            .
           </p>
+        </section>
 
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              How ATS software processes your resume
-            </h2>
-            <p>
-              When you submit a resume, the ATS does several things in sequence:
-            </p>
-            <ol className="mt-4 space-y-3 list-decimal list-inside">
-              <li>
-                <strong className="text-forge-text">Parsing:</strong> The system
-                extracts structured data from your document — name, contact
-                info, job titles, companies, dates, skills, and the full text of
-                each role. PDF parsing quality varies significantly between
-                platforms.
-              </li>
-              <li className="mt-3">
-                <strong className="text-forge-text">Scoring:</strong> The parsed
-                content is compared against criteria set by the recruiting team —
-                typically required skills, preferred skills, years of experience,
-                education level, and specific keywords from the job description.
-              </li>
-              <li className="mt-3">
-                <strong className="text-forge-text">Ranking:</strong> Candidates
-                are ranked or categorized (qualified / unqualified / maybe) and
-                appear in the recruiter&apos;s queue in that order. Being in the
-                bottom 50% of ranked candidates rarely leads to a review.
-              </li>
-            </ol>
-            <p className="mt-4">
-              The critical insight is that your resume needs to pass the parser
-              first and then score well against the job criteria. These are two
-              separate problems, and most candidates only think about the second
-              one.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              What an ATS resume optimizer actually does
-            </h2>
-            <p>
-              A good optimizer addresses both parsing and scoring:
-            </p>
-            <ul className="mt-4 space-y-3 list-none">
-              {[
-                {
-                  title: "Keyword gap analysis",
-                  body: "Compares the skills, technologies, and phrases in your resume against the job description and identifies what's missing or underrepresented.",
-                },
-                {
-                  title: "Format checking",
-                  body: "Flags layout issues that cause parsing failures — multi-column designs, tables, headers/footers, unusual fonts, and graphics.",
-                },
-                {
-                  title: "Section structure validation",
-                  body: "Checks that your sections use standard labels and are in an order that ATS software expects.",
-                },
-                {
-                  title: "Bullet rewriting",
-                  body: "Rewrites your experience bullets to naturally incorporate missing keywords without making them sound like a keyword list. This is where AI-powered tools offer the most value.",
-                },
-                {
-                  title: "Platform-specific guidance",
-                  body: "Different ATS platforms (Greenhouse, Lever, Workday, iCIMS) have different parsing behavior and scoring logic. Platform-aware optimization produces better results.",
-                },
-              ].map((item) => (
-                <li key={item.title} className="flex gap-3">
-                  <span className="text-forge-accent mt-0.5 shrink-0">→</span>
-                  <span>
-                    <strong className="text-forge-text">{item.title}:</strong>{" "}
-                    {item.body}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              What separates a good optimizer from a bad one
-            </h2>
-            <p>
-              There are roughly three tiers of ATS optimization tools on the
-              market:
-            </p>
-            <div className="mt-4 space-y-5">
-              <div className="border-l-2 border-forge-border pl-4">
-                <p className="text-forge-text font-medium">
-                  Basic keyword matchers
-                </p>
-                <p className="mt-1 text-sm">
-                  These count how many keywords from the job description appear
-                  in your resume and give you a percentage. They&apos;re better
-                  than nothing but miss the whole parsing side of the problem and
-                  don&apos;t help you rewrite anything.
-                </p>
-              </div>
-              <div className="border-l-2 border-forge-border pl-4">
-                <p className="text-forge-text font-medium">
-                  General AI rewriters
-                </p>
-                <p className="mt-1 text-sm">
-                  Tools that rewrite bullets to include keywords but have no
-                  platform-specific knowledge. A resume optimized generically
-                  will score differently on Greenhouse vs Workday — these tools
-                  don&apos;t account for that difference.
-                </p>
-              </div>
-              <div className="border-l-2 border-forge-border-bright pl-4">
-                <p className="text-forge-text font-medium">
-                  Platform-aware optimizers
-                </p>
-                <p className="mt-1 text-sm">
-                  Tools that know how specific ATS platforms parse PDFs, what
-                  fields they weight, and how recruiters typically configure
-                  their scoring. These produce meaningfully better results for
-                  targeted applications.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              How to use an optimizer without making your resume sound robotic
-            </h2>
-            <p>
-              The most common mistake is treating keyword suggestions as a
-              checklist and inserting them verbatim wherever they fit. Recruiters
-              who read your resume after the ATS filters are smart — they can
-              tell when a resume was stuffed.
-            </p>
-            <p className="mt-4">
-              The right approach:
-            </p>
-            <ul className="mt-3 space-y-3 list-none">
-              {[
-                "Use keyword suggestions as a signal, not a script. If 'cross-functional collaboration' is missing, find an actual example from your experience that demonstrates it — then write the bullet to match.",
-                "Prioritize the skills and technologies you actually know. Adding 'Kubernetes' to pass a filter when you've never used it will surface in a technical screen.",
-                "Keep bullets outcome-focused. Numbers, percentages, impact — this is what makes a resume readable to humans after it passes the ATS.",
-                "One optimization per application. The same resume rarely performs well for two different jobs. Tailor each one.",
-              ].map((item, i) => (
-                <li key={i} className="flex gap-3">
-                  <span className="text-forge-accent mt-0.5 shrink-0">→</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              The ATS platforms worth knowing in 2026
-            </h2>
-            <p>
-              The market is dominated by a handful of platforms. Each has
-              distinct parsing behavior:
-            </p>
-            <ul className="mt-4 space-y-3 list-none">
-              {[
-                {
-                  platform: "Greenhouse",
-                  note: "Strong PDF parser, but two-column layouts break it. Used heavily in tech and startups.",
-                },
-                {
-                  platform: "Lever",
-                  note: "Similar to Greenhouse in parsing quality. Often used alongside Greenhouse at larger companies.",
-                },
-                {
-                  platform: "Workday",
-                  note: "Notoriously strict parser. Multi-column layouts, tables, and non-standard section headers frequently cause major data loss.",
-                },
-                {
-                  platform: "iCIMS",
-                  note: "Common in enterprise and non-tech industries. Prefers clean, simple formatting.",
-                },
-                {
-                  platform: "Taleo (Oracle)",
-                  note: "One of the oldest ATS platforms. Large companies and government. Parse quality is poor — simple is essential.",
-                },
-              ].map((item) => (
-                <li key={item.platform} className="flex gap-3">
-                  <span className="text-forge-accent mt-0.5 shrink-0">→</span>
-                  <span>
-                    <strong className="text-forge-text">{item.platform}:</strong>{" "}
-                    {item.note}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="font-display text-xl font-semibold text-forge-text mb-4">
-              Try it on your resume
-            </h2>
-            <p>
-              GetDreamRole is built specifically for platform-aware
-              optimization. Choose the ATS the company uses, upload your resume,
-              paste the job description, and get a scored analysis with
-              AI-rewritten bullets — tuned to how that specific platform
-              evaluates candidates. One-time $9.99.
-            </p>
-            <div className="mt-6">
-              <Link
-                href="/optimize"
-                className="inline-flex items-center gap-2 bg-forge-accent hover:bg-forge-accent-hover text-forge-bg font-semibold px-5 py-2.5 rounded-lg transition-colors text-sm"
-              >
-                Optimize my resume →
-              </Link>
-            </div>
-          </section>
-        </div>
-      </main>
+        <GuideCta
+          title="Turn the next application into a tailored one"
+          description="Instead of guessing which keywords matter, run the resume against the posting and apply with a stronger version."
+          href="/optimize"
+          label="Optimize my resume for this job"
+        />
+      </GuideArticleShell>
     </>
   );
 }
