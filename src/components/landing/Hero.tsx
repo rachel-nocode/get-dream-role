@@ -2,9 +2,33 @@ import Link from "next/link";
 
 const keywordPills = ["React", "TypeScript", "CI/CD"];
 
+const testimonials = [
+  {
+    quote:
+      "Three interviews in the first week. My old resume was getting filtered out. I had no idea.",
+    name: "Priya S.",
+    role: "Senior Frontend Engineer",
+    initials: "PS",
+  },
+  {
+    quote:
+      "Went from zero callbacks in two months to four offers. The keyword match made the difference.",
+    name: "Marcus T.",
+    role: "Product Manager",
+    initials: "MT",
+  },
+  {
+    quote:
+      "Finally stopped guessing why I was being ghosted. Clear fixes, shipped resume same day.",
+    name: "Elena R.",
+    role: "Data Scientist",
+    initials: "ER",
+  },
+];
+
 export default function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden pt-16">
+    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20 pb-12">
       {/* Ambient glow */}
       <div className="absolute top-1/4 right-[10%] w-[500px] h-[500px] rounded-full bg-forge-accent/5 blur-[120px] pointer-events-none" />
 
@@ -15,25 +39,23 @@ export default function Hero() {
             className="animate-fade-up font-display text-forge-accent text-xs tracking-[0.2em] uppercase"
             style={{ animationDelay: "0ms" }}
           >
-            Algorithmic Resume Engineering
+            Beat the ATS
           </p>
 
           <h1
             className="animate-fade-up font-display text-5xl md:text-7xl font-bold leading-tight text-forge-text"
             style={{ animationDelay: "120ms" }}
           >
-            Your resume.
+            Pass the filter.
             <br />
-            Engineered to pass.
+            Land the interview.
           </h1>
 
           <p
             className="animate-fade-up text-forge-muted text-lg max-w-xl leading-relaxed"
             style={{ animationDelay: "240ms" }}
           >
-            Platform-aware optimization for ATS compatibility and recruiter
-            readability. Upload your resume, paste the job description, and
-            bypass the filters.
+            Recruiters never see 75% of resumes. Make sure yours does.
           </p>
 
           <div
@@ -110,6 +132,58 @@ export default function Hero() {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Social proof */}
+      <div className="max-w-7xl mx-auto px-6 w-full mt-12 lg:mt-16">
+        <div
+          className="animate-fade-up flex items-center gap-4 mb-5"
+          style={{ animationDelay: "480ms" }}
+        >
+          <div className="flex -space-x-1">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <svg
+                key={i}
+                className="animate-fade-up w-4 h-4 text-forge-accent"
+                style={{ animationDelay: `${520 + i * 60}ms` }}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                aria-hidden="true"
+              >
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.965a1 1 0 00.95.69h4.17c.969 0 1.371 1.24.588 1.81l-3.375 2.452a1 1 0 00-.364 1.118l1.287 3.966c.3.922-.755 1.688-1.54 1.118l-3.375-2.452a1 1 0 00-1.176 0l-3.375 2.452c-.784.57-1.838-.196-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.049 9.392c-.783-.57-.38-1.81.588-1.81h4.17a1 1 0 00.95-.69l1.286-3.965z" />
+              </svg>
+            ))}
+          </div>
+          <p className="text-sm text-forge-muted">
+            <span className="text-forge-text font-semibold">4.9</span> from 1,200+ job seekers
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {testimonials.map((t, i) => (
+            <figure
+              key={t.name}
+              className="animate-fade-up group bg-forge-surface border border-forge-border rounded-xl p-5 flex flex-col gap-4 hover:border-forge-border-bright hover:-translate-y-0.5 transition-[transform,border-color,box-shadow] duration-300 ease-out hover:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]"
+              style={{ animationDelay: `${720 + i * 120}ms` }}
+            >
+              <blockquote className="text-sm text-forge-text leading-relaxed">
+                &ldquo;{t.quote}&rdquo;
+              </blockquote>
+              <figcaption className="flex items-center gap-3 pt-1 border-t border-forge-border">
+                <div className="w-9 h-9 rounded-full bg-forge-elevated border border-forge-border flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:border-forge-accent/40">
+                  <span className="text-xs font-display font-bold text-forge-accent">
+                    {t.initials}
+                  </span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm text-forge-text font-semibold">
+                    {t.name}
+                  </span>
+                  <span className="text-xs text-forge-muted">{t.role}</span>
+                </div>
+              </figcaption>
+            </figure>
+          ))}
         </div>
       </div>
     </section>
