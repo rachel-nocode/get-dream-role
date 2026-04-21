@@ -7,7 +7,7 @@ import { buildMetadata, buildWebPageSchema } from "@/lib/seo";
 export const metadata: Metadata = buildMetadata({
   title: "ATS Platform Support",
   description:
-    "Choose the ATS the company uses and get resume guidance tuned to Greenhouse, Lever, Workday, iCIMS, Taleo, and other applicant tracking systems.",
+    "Choose the ATS the company uses and get resume guidance tuned to Greenhouse, Lever, Workday, iCIMS, Taleo, BrassRing, Workable, SmartRecruiters, and other applicant tracking systems.",
   path: "/ats",
   keywords: [
     "ATS platforms",
@@ -51,8 +51,8 @@ const platforms = [
     tag: "Used by: mid-market & enterprise",
     summary:
       "Semantic similarity scoring ranks candidates by contextual relevance. Clean formatting and contextual keyword usage beat keyword stuffing.",
-    href: "/optimize?ats=icims",
-    hasDedicatedPage: false,
+    href: "/ats/icims",
+    hasDedicatedPage: true,
   },
   {
     id: "taleo",
@@ -60,8 +60,35 @@ const platforms = [
     tag: "Used by: large companies & government",
     summary:
       "One of the oldest ATS platforms. Boolean keyword matching with rigid parsing rules. Simple, single-column formatting is essential.",
-    href: "/optimize?ats=taleo",
-    hasDedicatedPage: false,
+    href: "/ats/taleo",
+    hasDedicatedPage: true,
+  },
+  {
+    id: "brassring",
+    name: "BrassRing",
+    tag: "Used by: Fortune 500 & government",
+    summary:
+      "Infinite Talent (IBM Kenexa). Rigid parser, boolean keyword search, high-volume recruiter workflow. Exact-match terms are non-negotiable.",
+    href: "/ats/brassring",
+    hasDedicatedPage: true,
+  },
+  {
+    id: "workable",
+    name: "Workable",
+    tag: "Used by: SMB & mid-market",
+    summary:
+      "Modern parser with an AI Recruiter that scores candidates 1–5 stars. Exact-match skills and concrete bullets lift your rating.",
+    href: "/ats/workable",
+    hasDedicatedPage: true,
+  },
+  {
+    id: "smartrecruiters",
+    name: "SmartRecruiters",
+    tag: "Used by: global enterprise",
+    summary:
+      "Hybrid keyword + AI match scoring. Pre-screening questions and certifications weight heavily. Recruiters filter by match percentage.",
+    href: "/ats/smartrecruiters",
+    hasDedicatedPage: true,
   },
   {
     id: "generic",

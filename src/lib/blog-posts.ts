@@ -179,6 +179,72 @@ export const blogPosts: BlogPostMeta[] = [
       "optimize-resume-greenhouse-ats",
     ],
   },
+  {
+    slug: "optimize-resume-brassring-ats",
+    title: "How to Optimize Your Resume for BrassRing ATS (2026 Guide)",
+    description:
+      "BrassRing (Infinite Talent, IBM Kenexa) powers hiring at Fortune 500s and government. Rigid parsing, boolean keyword search. This guide shows how to format and write for it.",
+    date: "2026-04-23",
+    readTime: 7,
+    category: "ATS Optimization",
+    primaryKeyword: "brassring ats resume",
+    keywords: [
+      "brassring ats resume",
+      "kenexa resume tips",
+      "brassring resume format",
+      "ibm kenexa ats guide",
+      "optimize resume for brassring",
+    ],
+    relatedSlugs: [
+      "optimize-resume-taleo-ats",
+      "optimize-resume-workday-ats",
+      "ats-friendly-resume-format",
+    ],
+  },
+  {
+    slug: "optimize-resume-workable-ats",
+    title: "How to Optimize Your Resume for Workable ATS (2026 Guide)",
+    description:
+      "Workable powers hiring at tens of thousands of small and mid-sized companies. Modern parser, AI matching. This guide shows how to rank in Workable searches.",
+    date: "2026-04-30",
+    readTime: 6,
+    category: "ATS Optimization",
+    primaryKeyword: "workable ats resume",
+    keywords: [
+      "workable ats resume",
+      "workable resume tips",
+      "workable resume format",
+      "optimize resume for workable",
+      "workable ats guide",
+    ],
+    relatedSlugs: [
+      "optimize-resume-greenhouse-ats",
+      "optimize-resume-lever-ats",
+      "ats-friendly-resume-format",
+    ],
+  },
+  {
+    slug: "optimize-resume-smartrecruiters-ats",
+    title: "How to Optimize Your Resume for SmartRecruiters ATS (2026 Guide)",
+    description:
+      "SmartRecruiters powers hiring at Bosch, IKEA, LinkedIn, Visa, and hundreds of global employers. This guide covers its parsing, scoring, and recruiter workflow.",
+    date: "2026-05-07",
+    readTime: 7,
+    category: "ATS Optimization",
+    primaryKeyword: "smartrecruiters ats resume",
+    keywords: [
+      "smartrecruiters ats resume",
+      "smartrecruiters resume tips",
+      "smartrecruiters resume format",
+      "optimize resume for smartrecruiters",
+      "smartrecruiters ats guide",
+    ],
+    relatedSlugs: [
+      "optimize-resume-greenhouse-ats",
+      "optimize-resume-workable-ats",
+      "ats-friendly-resume-format",
+    ],
+  },
 ];
 
 export function getBlogPost(slug: string) {
