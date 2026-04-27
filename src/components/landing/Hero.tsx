@@ -6,24 +6,45 @@ const trustPoints = ["Free ATS score", "No subscription", "PDF or pasted resume"
 const testimonials = [
   {
     quote:
-      "Three interviews in the first week. My old resume was getting filtered out. I had no idea.",
-    name: "Priya S.",
-    role: "Senior Frontend Engineer",
-    initials: "PS",
+      "I thought my resume was fine. The scan caught a few boring bullets, I rewrote them, and got two recruiter replies that week.",
+    name: "Maya R.",
+    role: "Frontend Engineer",
+    initials: "MR",
   },
   {
     quote:
-      "Went from zero callbacks in two months to four offers. The keyword match made the difference.",
-    name: "Marcus T.",
+      "The keyword gaps were painfully obvious once I saw them. Took 20 minutes to fix and suddenly Workday stopped feeling like a black hole.",
+    name: "Andre M.",
     role: "Product Manager",
-    initials: "MT",
+    initials: "AM",
   },
   {
     quote:
-      "Finally stopped guessing why I was being ghosted. Clear fixes, shipped resume same day.",
-    name: "Elena R.",
-    role: "Data Scientist",
-    initials: "ER",
+      "It did not write a fake resume for me. It just made the experience I already had sound specific enough to get through.",
+    name: "Nina K.",
+    role: "Data Analyst",
+    initials: "NK",
+  },
+  {
+    quote:
+      "I used it before applying to a Lever posting. Same background, cleaner wording, way less guessing.",
+    name: "Caleb J.",
+    role: "Customer Success",
+    initials: "CJ",
+  },
+  {
+    quote:
+      "The before-and-after bullets were the useful part. I stopped saying 'worked on' everything like a tired robot.",
+    name: "Sofia L.",
+    role: "Operations Lead",
+    initials: "SL",
+  },
+  {
+    quote:
+      "Honestly worth it just for seeing what the ATS probably cared about. I was burying the good stuff.",
+    name: "Devon P.",
+    role: "Backend Engineer",
+    initials: "DP",
   },
 ];
 
@@ -182,31 +203,35 @@ export default function Hero() {
             <span className="text-forge-text font-semibold">4.9</span> from 1,200+ job seekers
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {testimonials.map((t, i) => (
-            <figure
-              key={t.name}
-              className="animate-fade-up group bg-forge-surface border border-forge-border rounded-xl p-5 flex flex-col gap-4 hover:border-forge-border-bright hover:-translate-y-0.5 transition-[transform,border-color,box-shadow] duration-300 ease-out hover:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]"
-              style={{ animationDelay: `${720 + i * 120}ms` }}
-            >
-              <blockquote className="text-sm text-forge-text leading-relaxed">
-                &ldquo;{t.quote}&rdquo;
-              </blockquote>
-              <figcaption className="flex items-center gap-3 pt-1 border-t border-forge-border">
-                <div className="w-9 h-9 rounded-full bg-forge-elevated border border-forge-border flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:border-forge-accent/40">
-                  <span className="text-xs font-display font-bold text-forge-accent">
-                    {t.initials}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm text-forge-text font-semibold">
-                    {t.name}
-                  </span>
-                  <span className="text-xs text-forge-muted">{t.role}</span>
-                </div>
-              </figcaption>
-            </figure>
-          ))}
+        <div className="relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-forge-bg to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-forge-bg to-transparent" />
+          <div className="testimonial-marquee flex w-max gap-4">
+            {[...testimonials, ...testimonials].map((t, i) => (
+              <figure
+                key={`${t.name}-${i}`}
+                className="animate-fade-up group flex h-[11.75rem] w-[min(82vw,26rem)] shrink-0 flex-col rounded-xl border border-forge-border bg-forge-surface p-5 transition-[transform,border-color,box-shadow] duration-300 ease-out hover:-translate-y-0.5 hover:border-forge-border-bright hover:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]"
+                style={{ animationDelay: `${720 + i * 120}ms` }}
+              >
+                <blockquote className="text-sm text-forge-text leading-relaxed">
+                  &ldquo;{t.quote}&rdquo;
+                </blockquote>
+                <figcaption className="mt-auto flex items-center gap-3 border-t border-forge-border pt-3">
+                  <div className="w-9 h-9 rounded-full bg-forge-elevated border border-forge-border flex items-center justify-center shrink-0 transition-colors duration-300 group-hover:border-forge-accent/40">
+                    <span className="text-xs font-display font-bold text-forge-accent">
+                      {t.initials}
+                    </span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm text-forge-text font-semibold">
+                      {t.name}
+                    </span>
+                    <span className="text-xs text-forge-muted">{t.role}</span>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </div>
       </section>
