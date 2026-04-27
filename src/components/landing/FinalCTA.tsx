@@ -23,16 +23,16 @@ export default function FinalCTA() {
           className="max-w-2xl"
         >
           <h2 className="font-display text-3xl md:text-4xl font-bold text-forge-text leading-tight">
-            Ready to forge a better resume?
+            Run the ATS check before you apply.
           </h2>
           <p className="text-forge-muted text-lg mt-4 leading-relaxed">
-            Upload your resume and see your ATS score in under 60 seconds.
+            Your first analysis is free. Upgrade once for unlimited resume optimizations.
           </p>
           <Link
             href="/optimize"
-            className="inline-block mt-8 bg-forge-accent hover:bg-forge-accent-hover text-forge-bg font-semibold px-6 py-3 rounded-lg transition-colors"
+            className="inline-block mt-8 bg-forge-accent hover:bg-forge-accent-hover text-forge-bg font-semibold px-6 py-3 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
-            Start Optimizing &rarr;
+            Get My Free ATS Score &rarr;
           </Link>
         </motion.div>
       </div>

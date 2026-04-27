@@ -51,7 +51,7 @@ export default function Benefits() {
           viewport={{ once: true, margin: "-80px" }}
           className="font-display text-3xl font-bold text-forge-text"
         >
-          Why engineers trust GetDreamRole
+          Why job seekers use GetDreamRole
         </motion.h2>
 
         <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-x-16">

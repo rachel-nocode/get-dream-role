@@ -23,7 +23,7 @@ export default function Navbar() {
       )}
     >
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-display font-bold text-lg">
+        <Link href="/" className="flex items-center gap-2 font-display font-bold text-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent">
           <span className="text-forge-accent text-sm">&#9632;</span>
           <span className="text-forge-text">GetDreamRole</span>
         </Link>
@@ -31,27 +31,27 @@ export default function Navbar() {
         <div className="flex items-center gap-8">
           <a
             href="#how-it-works"
-            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors"
+            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
             How It Works
           </a>
           <Link
             href="/blog"
-            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors"
+            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
             Guides
           </Link>
           <Link
             href="/payment"
-            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors"
+            className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
             Pricing
           </Link>
           <Link
             href="/optimize"
-            className="bg-forge-accent hover:bg-forge-accent-hover text-forge-bg text-sm font-semibold px-5 py-2 rounded-lg transition-colors"
+            className="bg-forge-accent hover:bg-forge-accent-hover text-forge-bg text-sm font-semibold px-5 py-2 rounded-lg transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
-            Start Optimizing
+            Free ATS Score
           </Link>
         </div>
       </div>

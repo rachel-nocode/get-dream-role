@@ -23,14 +23,13 @@ export default function GuideHighlights() {
             Practical ATS guides job seekers already search for
           </h2>
           <p className="mt-4 max-w-2xl text-lg leading-relaxed text-forge-muted">
-            These guides bring in high-intent readers and push them straight
-            into the optimizer instead of into generic career advice rabbit
-            holes.
+            Learn how each hiring platform reads resumes, then run the same
+            job description through the optimizer when you are ready to apply.
           </p>
         </div>
         <Link
           href="/blog"
-          className="text-sm font-semibold text-forge-accent underline underline-offset-4"
+          className="text-sm font-semibold text-forge-accent underline underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
         >
           View all guides
         </Link>
@@ -41,7 +40,7 @@ export default function GuideHighlights() {
           <Link
             key={guide.slug}
             href={`/blog/${guide.slug}`}
-            className="rounded-2xl border border-forge-border bg-forge-surface p-6 transition-colors hover:border-forge-border-bright"
+            className="rounded-xl border border-forge-border bg-forge-surface p-6 transition-colors hover:border-forge-border-bright focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
           >
             <p className="font-display text-xs uppercase tracking-[0.18em] text-forge-accent">
               {guide.category}

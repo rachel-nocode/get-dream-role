@@ -180,6 +180,9 @@ export function buildBlogPostingSchema({
 
 interface SoftwareApplicationSchemaOptions extends WebPageSchemaOptions {
   applicationCategory?: string;
+  applicationSubCategory?: string;
+  featureList?: string[];
+  reviews?: Review[];
   aggregateRating?: {
     ratingValue: string;
     reviewCount: string;
@@ -194,22 +197,32 @@ export function buildSoftwareApplicationSchema({
   path,
   keywords,
   applicationCategory = "BusinessApplication",
+  applicationSubCategory,
+  featureList,
+  reviews,
   aggregateRating,
 }: SoftwareApplicationSchemaOptions) {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": ["SoftwareApplication", "WebApplication"],
     name: title,
     description,
     url: absoluteUrl(path),
     applicationCategory,
+    applicationSubCategory,
     operatingSystem: "Web",
     offers: {
       "@type": "Offer",
+      url: absoluteUrl(path),
       price: siteConfig.price,
       priceCurrency: siteConfig.currency,
     },
     keywords,
+    featureList,
+    audience: {
+      "@type": "Audience",
+      audienceType: "Job seekers",
+    },
     publisher: {
       "@type": "Organization",
       name: siteConfig.name,
@@ -222,6 +235,22 @@ export function buildSoftwareApplicationSchema({
         bestRating: aggregateRating.bestRating ?? "5",
         worstRating: aggregateRating.worstRating ?? "1",
       },
+    }),
+    ...(reviews && {
+      review: reviews.map((review) => ({
+        "@type": "Review",
+        author: {
+          "@type": "Person",
+          name: review.author,
+        },
+        reviewBody: review.reviewBody,
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: review.ratingValue,
+          bestRating: "5",
+          worstRating: "1",
+        },
+      })),
     }),
   };
 }
@@ -244,14 +273,6 @@ export function buildWebSiteSchema() {
     name: siteConfig.name,
     url: siteConfig.url,
     description: siteConfig.description,
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${siteConfig.url}/blog?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
   };
 }
 

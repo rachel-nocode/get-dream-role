@@ -33,6 +33,11 @@ body {
   color: #ede9e3;
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-forge-accent);
+  outline-offset: 4px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -60,6 +65,21 @@ body {
 .animate-fade-up {
   opacity: 0;
   animation: fadeUp 0.5s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Grain overlay for hero */

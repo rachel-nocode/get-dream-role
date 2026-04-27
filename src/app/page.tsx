@@ -9,10 +9,8 @@ import GuideHighlights from "@/components/landing/GuideHighlights";
 import FAQ from "@/components/landing/FAQ";
 import StructuredData from "@/components/seo/StructuredData";
 import {
-  absoluteUrl,
   buildFAQPageSchema,
   buildMetadata,
-  buildReviewsSchema,
   buildSoftwareApplicationSchema,
   buildWebPageSchema,
   buildWebSiteSchema,
@@ -73,9 +71,9 @@ const homepageReviews = [
 ];
 
 export const metadata = buildMetadata({
-  title: "AI Resume Optimizer for Greenhouse, Workday, Lever and More",
+  title: "ATS Resume Optimizer for Greenhouse, Workday & Lever",
   description:
-    "Optimize your resume for the ATS the company actually uses. GetDreamRole helps job seekers rewrite resumes for Greenhouse, Lever, Workday, iCIMS, Taleo, and more.",
+    "Get a free ATS resume score, keyword gaps, and AI bullet rewrites tuned for Greenhouse, Workday, Lever, iCIMS, Taleo, and more. One-time $9.99 upgrade.",
   path: "/",
   keywords: [
     "ATS resume optimizer",
@@ -89,9 +87,9 @@ export const metadata = buildMetadata({
 const homepageSchemas = [
   buildWebSiteSchema(),
   buildWebPageSchema({
-    title: "GetDreamRole - AI Resume Optimizer for ATS",
+    title: "GetDreamRole - ATS Resume Optimizer",
     description:
-      "Optimize your resume for the ATS the company actually uses, then turn job descriptions into cleaner, more targeted resume bullets.",
+      "Get a free ATS resume score, find keyword gaps, and rewrite resume bullets for the hiring platform reading your application.",
     path: "/",
     keywords: [
       "ATS resume optimizer",
@@ -102,23 +100,27 @@ const homepageSchemas = [
   buildSoftwareApplicationSchema({
     title: "GetDreamRole Resume Optimizer",
     description:
-      "A web app that helps job seekers optimize resumes for Greenhouse, Workday, Lever, iCIMS, Taleo, and other ATS platforms.",
+      "A web app that scores resumes, finds keyword gaps, and rewrites bullet points for Greenhouse, Workday, Lever, iCIMS, Taleo, and other ATS platforms.",
     path: "/optimize",
     keywords: [
       "ATS resume optimizer",
       "resume ATS checker",
       "resume optimization tool",
     ],
+    applicationSubCategory: "Resume optimization",
+    featureList: [
+      "Free ATS resume score",
+      "Job description keyword analysis",
+      "Greenhouse, Workday, Lever, iCIMS, and Taleo targeting",
+      "AI resume bullet rewrites",
+      "One-time payment with no subscription",
+    ],
     aggregateRating: {
       ratingValue: "4.9",
       reviewCount: "1200",
     },
+    reviews: homepageReviews,
   }),
-  ...buildReviewsSchema(
-    "GetDreamRole Resume Optimizer",
-    absoluteUrl("/optimize"),
-    homepageReviews
-  ),
   buildFAQPageSchema(homepageFaqs),
 ];
 

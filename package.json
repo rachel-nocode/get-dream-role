@@ -17,6 +17,7 @@
     "@vercel/speed-insights": "^2.0.0",
     "clsx": "^2.1.1",
     "convex": "^1.34.1",
+    "datafast": "^3.0.0",
     "framer-motion": "^12.38.0",
     "groq-sdk": "^1.1.2",
     "lucide-react": "^1.7.0",

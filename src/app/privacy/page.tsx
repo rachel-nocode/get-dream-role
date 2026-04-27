@@ -63,13 +63,15 @@ export default function PrivacyPage() {
           <ul className="list-disc pl-5 mt-3 space-y-1">
             <li><strong className="text-forge-text">Stripe</strong> — payment processing. Subject to <a href="https://stripe.com/privacy" target="_blank" rel="noopener noreferrer" className="text-forge-accent hover:underline">Stripe&apos;s Privacy Policy</a>.</li>
             <li><strong className="text-forge-text">Groq</strong> — AI language model for resume analysis. Resume content is sent to Groq&apos;s API for processing.</li>
+            <li><strong className="text-forge-text">DataFast</strong> — cookieless website analytics.</li>
+            <li><strong className="text-forge-text">Vercel</strong> — analytics, speed insights, and hosting infrastructure.</li>
           </ul>
         </section>
 
         <section>
           <h2 className="font-display text-lg font-semibold text-forge-text mb-3">5. Cookies & Local Storage</h2>
           <p>
-            We use browser localStorage to store your payment status on your device. No tracking cookies are used. We do not use analytics services or advertising trackers.
+            We use browser localStorage to store your payment status on your device. DataFast is configured in cookieless mode for website analytics. We do not use advertising trackers.
           </p>
         </section>
 

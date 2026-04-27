@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { baseMetadata, buildOrganizationSchema } from "@/lib/seo";
 import StructuredData from "@/components/seo/StructuredData";
+import DataFastAnalytics from "@/components/analytics/DataFastAnalytics";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <StructuredData data={buildOrganizationSchema()} />
         <div className="flex-1">{children}</div>
         <Footer />
+        <DataFastAnalytics />
         <Analytics />
         <SpeedInsights />
       </body>
