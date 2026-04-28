@@ -9,6 +9,14 @@ test.describe('Payment / pricing page', () => {
     await expect(page.getByText('$9.99')).toBeVisible();
   });
 
+  test('shows crossed-out real price', async ({ page }) => {
+    await expect(page.getByText('$19.99')).toBeVisible();
+  });
+
+  test('shows 50% off badge', async ({ page }) => {
+    await expect(page.getByText(/50% off/i)).toBeVisible();
+  });
+
   test('shows one-time payment label', async ({ page }) => {
     await expect(page.getByText(/one.time payment/i)).toBeVisible();
   });

@@ -1,14 +1,14 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 const JOB_DESCRIPTION = 'We are looking for a skilled software engineer with experience in React, TypeScript, Node.js, and AWS to join our growing platform team.';
 
-async function goToStep2(page: any) {
+async function goToStep2(page: Page) {
   await page.getByText('Greenhouse').click();
   await page.getByRole('button', { name: /Continue/i }).click();
   await expect(page.getByPlaceholder(/Senior Frontend/i)).toBeVisible({ timeout: 8000 });
 }
 
-async function goToStep3(page: any) {
+async function goToStep3(page: Page) {
   await goToStep2(page);
   await page.getByPlaceholder(/Senior Frontend/i).fill('Software Engineer');
   await page.getByPlaceholder(/Paste the full/i).fill(JOB_DESCRIPTION);

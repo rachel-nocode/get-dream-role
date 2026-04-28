@@ -21,7 +21,7 @@ export default function StepProgress({
   canNavigate,
 }: StepProgressProps) {
   return (
-    <div className="flex items-center justify-center gap-0 py-8">
+    <div className="flex w-full items-start justify-center overflow-hidden py-8">
       {STEPS.map((step, index) => {
         const isCompleted = currentStep > step.number;
         const isActive = currentStep === step.number;
@@ -30,14 +30,14 @@ export default function StepProgress({
           (step.number <= currentStep && canNavigate(step.number));
 
         return (
-          <div key={step.number} className="flex items-center">
+          <div key={step.number} className="flex min-w-0 flex-1 items-start justify-center sm:flex-none">
             {/* Step */}
             <button
               type="button"
               onClick={() => isClickable && onStepClick(step.number)}
               disabled={!isClickable}
               className={clsx(
-                "flex flex-col items-center gap-2",
+                "flex min-w-0 flex-col items-center gap-2 text-center",
                 isClickable ? "cursor-pointer" : "cursor-default",
               )}
             >
@@ -64,7 +64,7 @@ export default function StepProgress({
               {/* Label */}
               <span
                 className={clsx(
-                  "text-xs font-medium whitespace-nowrap",
+                  "max-w-20 text-[11px] font-medium leading-tight sm:max-w-none sm:text-xs",
                   isActive && "text-forge-accent",
                   isCompleted && "text-forge-text",
                   !isActive && !isCompleted && "text-forge-muted",
@@ -78,7 +78,7 @@ export default function StepProgress({
             {index < STEPS.length - 1 && (
               <div
                 className={clsx(
-                  "mx-4 mb-6 h-px w-16 sm:w-24",
+                  "mx-1 mt-5 h-px min-w-6 flex-1 sm:mx-4 sm:w-24 sm:flex-none",
                   currentStep > step.number
                     ? "bg-forge-accent"
                     : "bg-forge-border",

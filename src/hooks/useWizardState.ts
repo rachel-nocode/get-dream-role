@@ -56,6 +56,7 @@ export function useWizardState() {
 
   // Restore from sessionStorage on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setState(loadFromStorage());
     setHydrated(true);
   }, []);

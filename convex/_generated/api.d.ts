@@ -8,7 +8,18 @@
  * @module
  */
 
+import type * as ResendOTP from "../ResendOTP.js";
+import type * as applications from "../applications.js";
+import type * as auth from "../auth.js";
+import type * as draftSupport from "../draftSupport.js";
+import type * as drafts from "../drafts.js";
+import type * as entitlements from "../entitlements.js";
+import type * as http from "../http.js";
+import type * as jobs from "../jobs.js";
+import type * as lib_jobUrls from "../lib/jobUrls.js";
+import type * as profiles from "../profiles.js";
 import type * as purchases from "../purchases.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +28,18 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ResendOTP: typeof ResendOTP;
+  applications: typeof applications;
+  auth: typeof auth;
+  draftSupport: typeof draftSupport;
+  drafts: typeof drafts;
+  entitlements: typeof entitlements;
+  http: typeof http;
+  jobs: typeof jobs;
+  "lib/jobUrls": typeof lib_jobUrls;
+  profiles: typeof profiles;
   purchases: typeof purchases;
+  validators: typeof validators;
 }>;
 
 /**

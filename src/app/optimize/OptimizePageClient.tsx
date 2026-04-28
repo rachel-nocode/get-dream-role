@@ -3,6 +3,7 @@
 import { useCallback, useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useConvexAuth, useQuery } from "convex/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, Loader2, Zap } from "lucide-react";
 import clsx from "clsx";
@@ -14,6 +15,7 @@ import StepATS from "@/components/wizard/StepATS";
 import StepJobDescription from "@/components/wizard/StepJobDescription";
 import StepUpload from "@/components/wizard/StepUpload";
 import PaymentGate from "@/components/payment/PaymentGate";
+import { api } from "../../../convex/_generated/api";
 
 const stepVariants = {
   enter: (direction: number) => ({
@@ -31,7 +33,12 @@ function OptimizePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [showPaymentGate, setShowPaymentGate] = useState(false);
-  const [hasPaidAccess, setHasPaidAccess] = useState(false);
+  const [hasLocalPaidAccess, setHasLocalPaidAccess] = useState(false);
+  const { isAuthenticated } = useConvexAuth();
+  const entitlements = useQuery(
+    api.entitlements.getForCurrentUser,
+    isAuthenticated ? {} : "skip",
+  );
   const urlParamApplied = useRef(false);
 
   const {
@@ -68,7 +75,7 @@ function OptimizePageInner() {
   useEffect(() => {
     try {
       if (localStorage.getItem("gdrPaid") === "true") {
-        setHasPaidAccess(true);
+        setHasLocalPaidAccess(true);
       }
     } catch {
       // ignore
@@ -122,6 +129,13 @@ function OptimizePageInner() {
       setIsAnalyzing(false);
     }
   }, [canProceed, router, setError, setIsAnalyzing, state]);
+
+  const hasPaidAccess =
+    hasLocalPaidAccess ||
+    entitlements?.some(
+      (entitlement) =>
+        entitlement.kind === "optimizer_lifetime" && entitlement.status === "active",
+    ) === true;
 
   const handleAnalyze = useCallback(() => {
     if (!canProceed(3)) return;
@@ -202,7 +216,7 @@ function OptimizePageInner() {
           canNavigate={canNavigateToStep}
         />
 
-        <div className="relative min-h-[420px]">
+        <div className="relative min-h-[420px] overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             {state.step === 1 && (
               <motion.div

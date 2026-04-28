@@ -20,6 +20,7 @@ export default function ResultsPage() {
       const stored = sessionStorage.getItem("gdrResult");
       if (stored) {
         const parsed = JSON.parse(stored) as AnalysisResult;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setResult(parsed);
       }
     } catch {

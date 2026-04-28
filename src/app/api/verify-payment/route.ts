@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
           await convex.mutation(api.purchases.recordPurchase, {
             stripeSessionId: sessionId,
             email,
+            product: String(session.metadata?.product ?? "ats-forge-access"),
           });
           console.log("[verify-payment] Recorded purchase for:", email);
         } catch (err) {

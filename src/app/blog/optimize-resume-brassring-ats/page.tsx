@@ -120,8 +120,8 @@ export default function BrassRingAtsPost() {
           <p className="mt-4">
             Pull required skills and tools directly from the job posting.
             Include them verbatim, not as paraphrases. If the posting says
-            "Epic EHR," write "Epic EHR" — not "Epic electronic health
-            records system."
+            &quot;Epic EHR,&quot; write &quot;Epic EHR&quot; — not &quot;Epic electronic health
+            records system.&quot;
           </p>
         </section>
 

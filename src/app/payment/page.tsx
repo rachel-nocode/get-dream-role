@@ -120,10 +120,17 @@ export default function PaymentPage() {
           </div>
         ) : (
           <div className="rounded-xl border border-forge-border bg-forge-surface p-8">
+            <div className="mb-5 inline-flex -rotate-2 rounded-md border-2 border-forge-bg bg-forge-accent px-4 py-1.5 text-sm font-black uppercase tracking-wide text-forge-bg shadow-lg shadow-forge-accent/20">
+              50% off
+            </div>
+
             {/* Price */}
-            <div className="mb-1">
+            <div className="mb-1 flex items-end gap-3">
               <span className="font-display text-6xl font-bold text-forge-text">
                 $9.99
+              </span>
+              <span className="pb-2 text-lg font-semibold text-forge-muted line-through decoration-forge-danger decoration-2">
+                $19.99
               </span>
             </div>
             <p className="text-sm text-forge-muted mb-6">One-time payment</p>
