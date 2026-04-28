@@ -34,6 +34,7 @@ export default function BrassRingLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/brassring"
         eyebrow="BrassRing ATS"
         headlineLines={["Get past", "BrassRing."]}
         intro="BrassRing (Infinite Talent, formerly IBM Kenexa) is one of the oldest enterprise ATS systems still in wide use. Rigid parser, boolean keyword search, high-volume recruiter workflows. GetDreamRole matches your resume to how BrassRing ranks."

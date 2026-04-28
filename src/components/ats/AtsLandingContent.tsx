@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
+import StructuredData from "@/components/seo/StructuredData";
+import { buildBreadcrumbSchema } from "@/lib/seo";
 
 interface FactItem {
   label: string;
@@ -27,6 +29,7 @@ interface AtsLandingContentProps {
   benefitsTitle: string;
   benefits: string[];
   relatedLinks: RelatedLink[];
+  path: string;
 }
 
 export default function AtsLandingContent({
@@ -43,9 +46,17 @@ export default function AtsLandingContent({
   benefitsTitle,
   benefits,
   relatedLinks,
+  path,
 }: AtsLandingContentProps) {
   return (
     <>
+      <StructuredData
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "ATS Platforms", path: "/ats" },
+          { name: eyebrow, path },
+        ])}
+      />
       <Navbar />
       <main className="mx-auto max-w-3xl px-6 py-20">
         <Link

@@ -33,6 +33,7 @@ export default function WorkdayLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/workday"
         eyebrow="Workday ATS"
         headlineLines={["Crack", "Workday."]}
         intro="Workday is used by many enterprise employers and it is much less forgiving than modern ATS systems. GetDreamRole helps you rewrite and reformat your resume for Workday's exact parsing and keyword rules."

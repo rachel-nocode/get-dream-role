@@ -4,7 +4,6 @@ import Navbar from "@/components/landing/Navbar";
 import StructuredData from "@/components/seo/StructuredData";
 import {
   buildBreadcrumbSchema,
-  buildFAQPageSchema,
   buildMetadata,
   buildWebPageSchema,
 } from "@/lib/seo";
@@ -68,7 +67,6 @@ const schemas = [
     { name: "Compare", path: "/vs/jobscan" },
     { name: "Jobscan", path: "/vs/jobscan" },
   ]),
-  buildFAQPageSchema(faqs),
 ];
 
 type Verdict = "getdreamrole" | "jobscan" | "tie";

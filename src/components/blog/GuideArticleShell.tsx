@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import type { BlogPostMeta } from "@/lib/blog-posts";
 import RelatedGuides from "@/components/blog/RelatedGuides";
+import StructuredData from "@/components/seo/StructuredData";
+import { buildBreadcrumbSchema } from "@/lib/seo";
 
 interface GuideArticleShellProps {
   post: BlogPostMeta;
@@ -26,6 +28,13 @@ export default function GuideArticleShell({
 }: GuideArticleShellProps) {
   return (
     <>
+      <StructuredData
+        data={buildBreadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
       <Navbar />
       <main className="mx-auto max-w-2xl px-6 py-20">
         <Link

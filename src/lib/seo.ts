@@ -32,9 +32,6 @@ export const baseMetadata: Metadata = {
   },
   description: siteConfig.description,
   metadataBase: new URL(siteConfig.url),
-  alternates: {
-    canonical: "/",
-  },
   applicationName: siteConfig.name,
   keywords: defaultKeywords,
   authors: [{ name: siteConfig.name }],
@@ -69,6 +66,7 @@ interface BuildMetadataOptions {
   path: string;
   keywords?: string[];
   type?: "website" | "article";
+  noIndex?: boolean;
 }
 
 export function buildMetadata({
@@ -77,11 +75,18 @@ export function buildMetadata({
   path,
   keywords,
   type = "website",
+  noIndex = false,
 }: BuildMetadataOptions): Metadata {
   return {
     title,
     description,
     keywords,
+    ...(noIndex && {
+      robots: {
+        index: false,
+        follow: false,
+      },
+    }),
     alternates: {
       canonical: path,
     },
@@ -182,6 +187,7 @@ interface SoftwareApplicationSchemaOptions extends WebPageSchemaOptions {
   applicationCategory?: string;
   applicationSubCategory?: string;
   featureList?: string[];
+  offerPrice?: string;
   reviews?: Review[];
   aggregateRating?: {
     ratingValue: string;
@@ -199,6 +205,7 @@ export function buildSoftwareApplicationSchema({
   applicationCategory = "BusinessApplication",
   applicationSubCategory,
   featureList,
+  offerPrice = siteConfig.price,
   reviews,
   aggregateRating,
 }: SoftwareApplicationSchemaOptions) {
@@ -214,7 +221,7 @@ export function buildSoftwareApplicationSchema({
     offers: {
       "@type": "Offer",
       url: absoluteUrl(path),
-      price: siteConfig.price,
+      price: offerPrice,
       priceCurrency: siteConfig.currency,
     },
     keywords,
@@ -311,6 +318,89 @@ export function buildBreadcrumbSchema(items: Breadcrumb[]) {
       name: item.name,
       item: absoluteUrl(item.path),
     })),
+  };
+}
+
+interface HowToStep {
+  name: string;
+  text: string;
+}
+
+interface HowToSchemaOptions {
+  name: string;
+  description: string;
+  steps: HowToStep[];
+}
+
+export function buildHowToSchema({
+  name,
+  description,
+  steps,
+}: HowToSchemaOptions) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name,
+    description,
+    step: steps.map((step, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: step.name,
+      text: step.text,
+    })),
+  };
+}
+
+interface ItemListSchemaOptions {
+  name: string;
+  description: string;
+  items: string[];
+}
+
+export function buildItemListSchema({
+  name,
+  description,
+  items,
+}: ItemListSchemaOptions) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name,
+    description,
+    numberOfItems: items.length,
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item,
+    })),
+  };
+}
+
+interface DatasetSchemaOptions {
+  name: string;
+  description: string;
+  path: string;
+  keywords?: string[];
+}
+
+export function buildDatasetSchema({
+  name,
+  description,
+  path,
+  keywords,
+}: DatasetSchemaOptions) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    name,
+    description,
+    url: absoluteUrl(path),
+    keywords,
+    creator: {
+      "@type": "Organization",
+      name: siteConfig.name,
+    },
+    license: absoluteUrl(path),
   };
 }
 

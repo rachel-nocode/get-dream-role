@@ -22,6 +22,15 @@ test.describe("SEO growth surfaces", () => {
     expect(sitemapText).toContain(
       "https://www.getdreamrole.com/blog/why-qualified-candidates-get-rejected-by-ats",
     );
+    expect(sitemapText).toContain(
+      "https://www.getdreamrole.com/free-ats-resume-checker",
+    );
+    expect(sitemapText).toContain(
+      "https://www.getdreamrole.com/tools/ats-score-checker",
+    );
+    expect(sitemapText).toContain(
+      "https://www.getdreamrole.com/blog/does-my-resume-pass-ats",
+    );
   });
 
   test("blog index highlights the new high-intent guides", async ({ page }) => {
@@ -60,11 +69,10 @@ test.describe("SEO growth surfaces", () => {
       }),
     ).toBeVisible();
 
-    const icimsSchema = await page
+    const icimsSchemas = await page
       .locator('script[type="application/ld+json"]')
-      .first()
-      .textContent();
-    expect(icimsSchema).toContain('"@type":"WebPage"');
+      .allTextContents();
+    expect(icimsSchemas.join("\n")).toContain('"@type":"WebPage"');
 
     await page.goto("/blog/optimize-resume-workday-ats");
     await expect(
@@ -79,10 +87,28 @@ test.describe("SEO growth surfaces", () => {
       page.getByRole("link", { name: "Optimize my resume now" }),
     ).toBeVisible();
 
-    const articleSchema = await page
+    const articleSchemas = await page
       .locator('script[type="application/ld+json"]')
-      .first()
-      .textContent();
-    expect(articleSchema).toContain('"@type":"BlogPosting"');
+      .allTextContents();
+    expect(articleSchemas.join("\n")).toContain('"@type":"BlogPosting"');
+  });
+
+  test("high-intent SEO pages render crawlable headings", async ({ page }) => {
+    await page.goto("/free-ats-resume-checker");
+    await expect(
+      page.getByRole("heading", { name: /Score your resume/i }),
+    ).toBeVisible();
+
+    await page.goto("/tools/ats-score-checker");
+    await expect(
+      page.getByRole("heading", { name: /Know your ATS score/i }),
+    ).toBeVisible();
+
+    await page.goto("/blog/does-my-resume-pass-ats");
+    await expect(
+      page.getByRole("heading", {
+        name: "Does My Resume Pass ATS? How to Actually Know",
+      }),
+    ).toBeVisible();
   });
 });

@@ -33,6 +33,7 @@ export default function LeverLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/lever"
         eyebrow="Lever ATS"
         headlineLines={["Stand out", "in Lever."]}
         intro="Lever is built for collaborative hiring, which means engineers, PMs, and recruiters may all scan the same resume. GetDreamRole helps you write for Lever's context-aware matching and team-based review."

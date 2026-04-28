@@ -7,8 +7,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { baseMetadata, buildOrganizationSchema } from "@/lib/seo";
 import StructuredData from "@/components/seo/StructuredData";
 import DataFastAnalytics from "@/components/analytics/DataFastAnalytics";
-import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import ConvexClientProvider from "@/components/providers/ConvexClientProvider";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -32,16 +30,12 @@ export default async function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth" className={`${spaceGrotesk.variable} ${sora.variable}`}>
       <body className="flex flex-col min-h-screen">
-        <ConvexAuthNextjsServerProvider>
-          <ConvexClientProvider>
-            <StructuredData data={buildOrganizationSchema()} />
-            <div className="flex-1">{children}</div>
-            <Footer />
-            <DataFastAnalytics />
-            <Analytics />
-            <SpeedInsights />
-          </ConvexClientProvider>
-        </ConvexAuthNextjsServerProvider>
+        <StructuredData data={buildOrganizationSchema()} />
+        <div className="flex-1">{children}</div>
+        <Footer />
+        <DataFastAnalytics />
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

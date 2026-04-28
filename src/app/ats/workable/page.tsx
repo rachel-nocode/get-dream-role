@@ -34,6 +34,7 @@ export default function WorkableLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/workable"
         eyebrow="Workable ATS"
         headlineLines={["Rank in", "Workable."]}
         intro="Workable runs the hiring pipeline at more than 30,000 companies worldwide. Its AI Recruiter scores every candidate 1–5 stars against the job description — low-scored resumes rarely get a human review. GetDreamRole calibrates your resume to that scoring."

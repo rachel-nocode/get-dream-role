@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Terms of Service — GetDreamRole",
-};
+export const metadata = buildMetadata({
+  title: "Terms of Service",
+  description:
+    "Terms of Service for using GetDreamRole resume optimization and related job-search tools.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

@@ -9,7 +9,6 @@ import GuideHighlights from "@/components/landing/GuideHighlights";
 import FAQ from "@/components/landing/FAQ";
 import StructuredData from "@/components/seo/StructuredData";
 import {
-  buildFAQPageSchema,
   buildMetadata,
   buildSoftwareApplicationSchema,
   buildWebPageSchema,
@@ -49,38 +48,17 @@ const homepageFaqs = [
   },
 ];
 
-const homepageReviews = [
-  {
-    author: "Priya S.",
-    reviewBody:
-      "Three interviews in the first week. My old resume was getting filtered out. I had no idea.",
-    ratingValue: "5",
-  },
-  {
-    author: "Marcus T.",
-    reviewBody:
-      "Went from zero callbacks in two months to four offers. The keyword match made the difference.",
-    ratingValue: "5",
-  },
-  {
-    author: "Elena R.",
-    reviewBody:
-      "Finally stopped guessing why I was being ghosted. Clear fixes, shipped resume same day.",
-    ratingValue: "5",
-  },
-];
-
 export const metadata = buildMetadata({
-  title: "ATS Resume Optimizer for Greenhouse, Workday & Lever",
+  title: "Free ATS Resume Checker + AI Resume Optimizer",
   description:
-    "Get a free ATS resume score, keyword gaps, and AI bullet rewrites tuned for Greenhouse, Workday, Lever, iCIMS, Taleo, and more. One-time $9.99 upgrade.",
+    "Check your resume against a real job description, find ATS keyword gaps, and get AI bullet rewrites for Greenhouse, Workday, Lever, iCIMS, Taleo, and more.",
   path: "/",
   keywords: [
+    "free ATS resume checker",
+    "ATS resume checker",
     "ATS resume optimizer",
     "resume optimization tool",
-    "Greenhouse resume tips",
-    "Workday resume format",
-    "resume ATS checker",
+    "resume score checker",
   ],
 });
 
@@ -92,9 +70,9 @@ const homepageSchemas = [
       "Get a free ATS resume score, find keyword gaps, and rewrite resume bullets for the hiring platform reading your application.",
     path: "/",
     keywords: [
+      "free ATS resume checker",
       "ATS resume optimizer",
-      "resume ATS checker",
-      "resume optimization",
+      "resume score checker",
     ],
   }),
   buildSoftwareApplicationSchema({
@@ -103,9 +81,9 @@ const homepageSchemas = [
       "A web app that scores resumes, finds keyword gaps, and rewrites bullet points for Greenhouse, Workday, Lever, iCIMS, Taleo, and other ATS platforms.",
     path: "/optimize",
     keywords: [
+      "free ATS resume checker",
       "ATS resume optimizer",
-      "resume ATS checker",
-      "resume optimization tool",
+      "resume score checker",
     ],
     applicationSubCategory: "Resume optimization",
     featureList: [
@@ -115,13 +93,7 @@ const homepageSchemas = [
       "AI resume bullet rewrites",
       "One-time payment with no subscription",
     ],
-    aggregateRating: {
-      ratingValue: "4.9",
-      reviewCount: "1200",
-    },
-    reviews: homepageReviews,
   }),
-  buildFAQPageSchema(homepageFaqs),
 ];
 
 export default function Home() {

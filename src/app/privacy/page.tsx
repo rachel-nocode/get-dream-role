@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata = {
-  title: "Privacy Policy — GetDreamRole",
-};
+export const metadata = buildMetadata({
+  title: "Privacy Policy",
+  description:
+    "Privacy policy for GetDreamRole resume optimization, payments, analytics, and resume processing.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

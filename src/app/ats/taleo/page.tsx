@@ -33,6 +33,7 @@ export default function TaleoLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/taleo"
         eyebrow="Taleo ATS"
         headlineLines={["Make your resume", "survive Taleo."]}
         intro="Taleo is still used by large enterprises, government-adjacent employers, and organizations running older recruiting workflows. GetDreamRole helps you simplify your resume and match the exact phrasing Taleo is more likely to reward."

@@ -33,6 +33,7 @@ export default function ICimsLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/icims"
         eyebrow="iCIMS ATS"
         headlineLines={["Get more interviews", "through iCIMS."]}
         intro="iCIMS is widely used in enterprise, healthcare, education, and high-volume recruiting teams. GetDreamRole helps you structure your resume so iCIMS can parse it cleanly and match you to the right job criteria."

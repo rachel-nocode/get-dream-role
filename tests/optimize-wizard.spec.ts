@@ -66,7 +66,7 @@ test.describe('Optimize wizard', () => {
     await expect(page.getByPlaceholder(/Senior Frontend/i)).toHaveValue('Frontend Engineer', { timeout: 8000 });
   });
 
-  test('payment gate shown on step 3 analyze when unpaid', async ({ page }) => {
+  test('first analysis runs free when unpaid', async ({ page }) => {
     await page.evaluate((jd) => {
       sessionStorage.setItem('gdrWizard', JSON.stringify({
         step: 3,
@@ -80,8 +80,7 @@ test.describe('Optimize wizard', () => {
     await page.reload();
     await expect(page.getByRole('button', { name: /Analyze Resume/i })).toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: /Analyze Resume/i }).click();
-    await expect(page.getByText(/Unlock Your Analysis/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('$9.99').first()).toBeVisible();
+    await expect(page.getByText(/Building your optimized resume/i)).toBeVisible({ timeout: 8000 });
   });
 
   test('already paid skips payment gate and starts analysis', async ({ page }) => {

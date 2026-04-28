@@ -180,6 +180,28 @@ export const blogPosts: BlogPostMeta[] = [
     ],
   },
   {
+    slug: "does-my-resume-pass-ats",
+    title: "Does My Resume Pass ATS? How to Actually Know",
+    description:
+      "Use this quick ATS pass/fail checklist to spot keyword gaps, risky formatting, missing sections, and parser problems before you apply.",
+    date: "2026-04-28",
+    readTime: 8,
+    category: "ATS Strategy",
+    primaryKeyword: "does my resume pass ats",
+    keywords: [
+      "does my resume pass ats",
+      "will my resume pass ats",
+      "resume ats test",
+      "check if resume is ats friendly",
+      "how to know if resume passes ats",
+    ],
+    relatedSlugs: [
+      "ats-friendly-resume-format",
+      "why-qualified-candidates-get-rejected-by-ats",
+      "ats-resume-optimizer-guide",
+    ],
+  },
+  {
     slug: "optimize-resume-brassring-ats",
     title: "How to Optimize Your Resume for BrassRing ATS (2026 Guide)",
     description:
@@ -206,7 +228,7 @@ export const blogPosts: BlogPostMeta[] = [
     title: "How to Optimize Your Resume for Workable ATS (2026 Guide)",
     description:
       "Workable powers hiring at tens of thousands of small and mid-sized companies. Modern parser, AI matching. This guide shows how to rank in Workable searches.",
-    date: "2026-04-30",
+    date: "2026-04-28",
     readTime: 6,
     category: "ATS Optimization",
     primaryKeyword: "workable ats resume",
@@ -228,7 +250,7 @@ export const blogPosts: BlogPostMeta[] = [
     title: "How to Optimize Your Resume for SmartRecruiters ATS (2026 Guide)",
     description:
       "SmartRecruiters powers hiring at Bosch, IKEA, LinkedIn, Visa, and hundreds of global employers. This guide covers its parsing, scoring, and recruiter workflow.",
-    date: "2026-05-07",
+    date: "2026-04-28",
     readTime: 7,
     category: "ATS Optimization",
     primaryKeyword: "smartrecruiters ats resume",

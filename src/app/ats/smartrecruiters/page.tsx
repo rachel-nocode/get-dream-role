@@ -34,6 +34,7 @@ export default function SmartRecruitersLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/smartrecruiters"
         eyebrow="SmartRecruiters ATS"
         headlineLines={["Rank in", "SmartRecruiters."]}
         intro="SmartRecruiters powers hiring at Bosch, IKEA, Visa, LinkedIn, Atos, and hundreds of other global employers. Its hybrid engine combines keyword match with contextual AI scoring — and recruiters lean on the visible match percentage as a first filter."

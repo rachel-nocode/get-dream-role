@@ -27,10 +27,10 @@ One long-form ATS guide per week. Each guide ships with a matching `/ats/<platfo
 | 4 | 2026-04-16 | Workday | `optimize-resume-workday-ats` | `/ats/workday` | workday ats resume |
 | 5 | 2026-04-16 | Lever | `optimize-resume-lever-ats` | `/ats/lever` | lever ats resume |
 | 6 | 2026-04-23 | **BrassRing** | `optimize-resume-brassring-ats` | `/ats/brassring` | brassring ats resume |
-| 7 | 2026-04-30 | **Workable** | `optimize-resume-workable-ats` | `/ats/workable` | workable ats resume |
-| 8 | 2026-05-07 | **SmartRecruiters** | `optimize-resume-smartrecruiters-ats` | `/ats/smartrecruiters` | smartrecruiters ats resume |
+| 7 | 2026-04-28 | **Workable** | `optimize-resume-workable-ats` | `/ats/workable` | workable ats resume |
+| 8 | 2026-04-28 | **SmartRecruiters** | `optimize-resume-smartrecruiters-ats` | `/ats/smartrecruiters` | smartrecruiters ats resume |
 
-Weeks 1–5 already shipped before 2026-04-21. Weeks 6–8 queued with forward-dated `date` fields in `blog-posts.ts` so the sitemap `lastModified` is accurate but the content is live now for crawlers.
+Weeks 1–5 shipped before 2026-04-21. Weeks 6–8 are live with non-future publish dates so sitemap `lastModified` stays trustworthy for crawlers.
 
 ## Next candidates (post-2026-05-07)
 

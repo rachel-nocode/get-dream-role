@@ -33,6 +33,7 @@ export default function GreenhouseLandingPage() {
     <>
       <StructuredData data={schema} />
       <AtsLandingContent
+        path="/ats/greenhouse"
         eyebrow="Greenhouse ATS"
         headlineLines={["Get past", "Greenhouse."]}
         intro="Greenhouse powers hiring at Airbnb, Dropbox, HubSpot, Notion, and thousands of tech companies. GetDreamRole optimizes your resume for how Greenhouse parses, scores, and ranks candidates."

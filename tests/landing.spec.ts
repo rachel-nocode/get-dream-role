@@ -6,7 +6,7 @@ test.describe('Landing page', () => {
   });
 
   test('page title is correct', async ({ page }) => {
-    await expect(page).toHaveTitle('GetDreamRole');
+    await expect(page).toHaveTitle('Free ATS Resume Checker + AI Resume Optimizer');
   });
 
   test('navbar shows brand name', async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe('Landing page', () => {
   });
 
   test('navbar has Start Optimizing CTA', async ({ page }) => {
-    await expect(page.locator('nav').getByRole('link', { name: 'Start Optimizing' })).toBeVisible();
+    await expect(page.locator('nav').getByRole('link', { name: 'Free ATS Score' })).toBeVisible();
   });
 
   test('navbar Pricing link navigates to /payment', async ({ page, isMobile }) => {
@@ -42,7 +42,7 @@ test.describe('Landing page', () => {
   });
 
   test('Benefits section is visible', async ({ page }) => {
-    await expect(page.getByText(/Why.*trust GetDreamRole/i)).toBeVisible();
+    await expect(page.getByText(/Why job seekers use GetDreamRole/i)).toBeVisible();
   });
 
   test('footer shows correct year and name', async ({ page }) => {
