@@ -3,17 +3,22 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, BriefcaseBusiness, FileText, Plus } from "lucide-react";
+import clsx from "clsx";
 import type { AnalysisResult } from "@/lib/types";
 import ScoreCards from "@/components/results/ScoreCards";
 import KeywordAnalysis from "@/components/results/KeywordAnalysis";
 import SectionFeedback from "@/components/results/SectionFeedback";
 import BulletRewrites from "@/components/results/BulletRewrites";
 import OptimizedResume from "@/components/results/OptimizedResume";
+import JobMatches from "@/components/results/JobMatches";
+
+type ResultsTab = "resume" | "jobs";
 
 export default function ResultsPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<ResultsTab>("resume");
 
   useEffect(() => {
     try {
@@ -94,33 +99,60 @@ export default function ResultsPage() {
               {result.summary}
             </p>
           </div>
+
+          <div className="grid grid-cols-2 gap-2 rounded-xl border border-forge-border bg-forge-surface p-1 md:w-fit">
+            {[
+              { id: "resume" as const, label: "Resume", icon: FileText },
+              { id: "jobs" as const, label: "Jobs", icon: BriefcaseBusiness },
+            ].map((tab) => {
+              const Icon = tab.icon;
+
+              return (
+                <button
+                  type="button"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={clsx(
+                    "inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors",
+                    activeTab === tab.id
+                      ? "bg-forge-accent text-forge-bg"
+                      : "text-forge-muted hover:bg-forge-elevated hover:text-forge-text",
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Score Cards */}
-        <ScoreCards
-          atsScore={result.atsScore}
-          matchScore={result.matchScore}
-          targetName={result.targetName}
-        />
+        {activeTab === "resume" ? (
+          <>
+            <ScoreCards
+              atsScore={result.atsScore}
+              matchScore={result.matchScore}
+              targetName={result.targetName}
+            />
 
-        {/* Keyword Analysis */}
-        <KeywordAnalysis
-          presentKeywords={result.presentKeywords}
-          missingKeywords={result.missingKeywords}
-          suggestedKeywords={result.suggestedKeywords}
-        />
+            <KeywordAnalysis
+              presentKeywords={result.presentKeywords}
+              missingKeywords={result.missingKeywords}
+              suggestedKeywords={result.suggestedKeywords}
+            />
 
-        {/* Section Feedback */}
-        <SectionFeedback sections={result.sectionFeedback} />
+            <SectionFeedback sections={result.sectionFeedback} />
 
-        {/* Bullet Rewrites */}
-        <BulletRewrites rewrites={result.bulletRewrites} />
+            <BulletRewrites rewrites={result.bulletRewrites} />
 
-        {/* Optimized Resume & Insights */}
-        <OptimizedResume
-          resume={result.optimizedResume}
-          insights={result.atsInsights}
-        />
+            <OptimizedResume
+              resume={result.optimizedResume}
+              insights={result.atsInsights}
+            />
+          </>
+        ) : (
+          <JobMatches result={result} />
+        )}
       </div>
     </motion.div>
   );

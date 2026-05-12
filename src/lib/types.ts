@@ -86,6 +86,24 @@ export interface Job {
   job_salary_currency: string | null;
 }
 
+export interface MatchedJob {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
+  employmentType: string | null;
+  postedAt: string | null;
+  description: string;
+  applyLink: string;
+  isRemote: boolean;
+  salaryMin: number | null;
+  salaryMax: number | null;
+  salaryCurrency: string | null;
+  matchScore: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+}
+
 export interface BulletRewrite {
   original: string;
   rewritten: string;
@@ -112,4 +130,6 @@ export interface AnalysisResult {
   optimizedResume: string;
   summary: string;
   atsInsights: string[];
+  jobTitle?: string;
+  jobDescription?: string;
 }

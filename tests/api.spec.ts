@@ -52,4 +52,13 @@ test.describe('API routes', () => {
     });
     expect([200, 400, 422]).toContain(res.status());
   });
+
+  test('POST /api/jobs/match requires an optimized resume', async ({ request }) => {
+    const res = await request.post('/api/jobs/match', {
+      data: { optimizedResume: '', jobTitle: 'Frontend Engineer', keywords: ['React'] },
+    });
+    expect(res.status()).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/Optimized resume/i);
+  });
 });

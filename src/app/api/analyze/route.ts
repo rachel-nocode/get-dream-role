@@ -24,6 +24,8 @@ export async function POST(request: NextRequest) {
         ...DEMO_RESULT,
         atsTarget,
         targetName,
+        jobTitle: jobTitle || "",
+        jobDescription,
       });
     }
 
@@ -35,7 +37,11 @@ export async function POST(request: NextRequest) {
       resumeText
     );
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      jobTitle: jobTitle || "",
+      jobDescription,
+    });
   } catch (error) {
     console.error("Analysis error:", error);
     return NextResponse.json(

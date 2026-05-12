@@ -26,4 +26,7 @@ export const fakeAnalysisResult = {
   summary:
     'Your resume is a strong match for this Greenhouse role after adding clearer platform keywords.',
   atsInsights: ['Greenhouse rewards clear section labels and specific technical keywords.'],
+  jobTitle: 'Frontend Engineer',
+  jobDescription:
+    'We need a frontend engineer with React, TypeScript, Node.js, AWS, REST APIs, testing, accessibility, and product-focused collaboration experience.',
 };
