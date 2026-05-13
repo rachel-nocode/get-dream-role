@@ -22,13 +22,31 @@ const sora = Sora({
 
 export const metadata: Metadata = baseMetadata;
 
+const themeScript = `
+  try {
+    var theme = localStorage.getItem("getdreamrole-theme");
+    document.documentElement.dataset.theme = theme === "light" ? "light" : "dark";
+  } catch (_) {
+    document.documentElement.dataset.theme = "dark";
+  }
+`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${spaceGrotesk.variable} ${sora.variable}`}>
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      data-theme="dark"
+      suppressHydrationWarning
+      className={`${spaceGrotesk.variable} ${sora.variable}`}
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="flex flex-col min-h-screen">
         <StructuredData data={buildOrganizationSchema()} />
         <div className="flex-1">{children}</div>

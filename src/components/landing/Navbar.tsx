@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import clsx from "clsx";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -28,7 +29,7 @@ export default function Navbar() {
           <span className="text-forge-text">GetDreamRole</span>
         </Link>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3 md:gap-8">
           <a
             href="#how-it-works"
             className="hidden md:block text-sm text-forge-muted hover:text-forge-text transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-forge-accent"
@@ -53,6 +54,7 @@ export default function Navbar() {
           >
             Free ATS Score
           </Link>
+          <ThemeToggle />
         </div>
       </div>
     </nav>

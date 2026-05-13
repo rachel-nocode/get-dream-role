@@ -1,21 +1,49 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-forge-bg: #0a0a10;
-  --color-forge-surface: #12121b;
-  --color-forge-elevated: #1a1a26;
-  --color-forge-border: #242432;
-  --color-forge-border-bright: #34344a;
-  --color-forge-text: #ede9e3;
-  --color-forge-muted: #7d7a8a;
-  --color-forge-accent: #d4873e;
-  --color-forge-accent-hover: #e09a52;
-  --color-forge-accent-dim: #d4873e18;
+  --color-forge-bg: var(--forge-bg);
+  --color-forge-surface: var(--forge-surface);
+  --color-forge-elevated: var(--forge-elevated);
+  --color-forge-border: var(--forge-border);
+  --color-forge-border-bright: var(--forge-border-bright);
+  --color-forge-text: var(--forge-text);
+  --color-forge-muted: var(--forge-muted);
+  --color-forge-accent: var(--forge-accent);
+  --color-forge-accent-hover: var(--forge-accent-hover);
+  --color-forge-accent-dim: var(--forge-accent-dim);
   --color-forge-success: #4ade80;
   --color-forge-warning: #fbbf24;
   --color-forge-danger: #f87171;
   --font-display: var(--font-space-grotesk);
   --font-body: var(--font-sora);
+}
+
+:root {
+  --forge-bg: oklch(98% 0.012 252);
+  --forge-surface: oklch(100% 0.006 252);
+  --forge-elevated: oklch(95% 0.018 252);
+  --forge-border: oklch(88% 0.025 252);
+  --forge-border-bright: oklch(78% 0.04 252);
+  --forge-text: oklch(20% 0.035 252);
+  --forge-muted: oklch(47% 0.045 252);
+  --forge-accent: oklch(54% 0.2 258);
+  --forge-accent-hover: oklch(48% 0.22 258);
+  --forge-accent-dim: oklch(54% 0.2 258 / 0.12);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --forge-bg: oklch(12% 0.018 252);
+  --forge-surface: oklch(18% 0.022 252);
+  --forge-elevated: oklch(24% 0.026 252);
+  --forge-border: oklch(29% 0.03 252);
+  --forge-border-bright: oklch(39% 0.04 252);
+  --forge-text: oklch(94% 0.016 252);
+  --forge-muted: oklch(63% 0.035 252);
+  --forge-accent: oklch(69% 0.17 252);
+  --forge-accent-hover: oklch(76% 0.15 252);
+  --forge-accent-dim: oklch(69% 0.17 252 / 0.16);
+  color-scheme: dark;
 }
 
 html {
@@ -29,8 +57,8 @@ body {
 }
 
 ::selection {
-  background: rgba(212, 135, 62, 0.3);
-  color: #ede9e3;
+  background: color-mix(in oklch, var(--forge-accent) 28%, transparent);
+  color: var(--forge-text);
 }
 
 :focus-visible {

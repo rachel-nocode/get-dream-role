@@ -6,6 +6,7 @@ import { AuthLoading, Authenticated, Unauthenticated } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Briefcase, CreditCard, FilePlus2, LayoutDashboard, LogOut } from "lucide-react";
 import clsx from "clsx";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -47,27 +48,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="text-forge-accent text-sm">&#9632;</span>
                 <span>GetDreamRole</span>
               </Link>
-              <nav className="flex flex-wrap items-center gap-2">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              <div className="flex flex-wrap items-center gap-2">
+                <nav className="flex flex-wrap items-center gap-2">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={clsx(
-                        "inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm transition-colors",
-                        active
-                          ? "bg-forge-accent text-forge-bg"
-                          : "text-forge-muted hover:bg-forge-surface hover:text-forge-text",
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={clsx(
+                          "inline-flex h-10 items-center gap-2 rounded-lg px-3 text-sm transition-colors",
+                          active
+                            ? "bg-forge-accent text-forge-bg"
+                            : "text-forge-muted hover:bg-forge-surface hover:text-forge-text",
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
                 <button
                   type="button"
                   onClick={async () => {
@@ -79,7 +82,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   <LogOut className="h-4 w-4" />
                   Sign out
                 </button>
-              </nav>
+                <ThemeToggle />
+              </div>
             </div>
           </header>
           <main className="mx-auto min-h-screen max-w-7xl px-6 py-10">{children}</main>
