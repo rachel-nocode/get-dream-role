@@ -417,6 +417,34 @@ test.describe("rejected claims", () => {
     expect(containsClaim("Worked in IT support", "IT")).toBe(true);
     expect(containsClaim("Built the commit pipeline", "IT")).toBe(false);
     expect(containsClaim("Moved services to Node.js", "Node.js")).toBe(true);
+    // A sentence-ending period is not part of the word.
+    expect(containsClaim("Backend engineer who ships Kafka.", "Kafka")).toBe(true);
+    expect(containsClaim("Moved services to Node.js.", "Node.js")).toBe(true);
+    expect(containsClaim("Grew the team to 20.", "20")).toBe(true);
+    expect(containsClaim("Shipped v1.20 last year", "20")).toBe(false);
+  });
+
+  test("takes a claim out of a bullet that ends with it", () => {
+    const next = applyClaimRejection(
+      {
+        ...draft,
+        summary: "",
+        coverLetter: "I would like to do the same for you.",
+        optimizedResume: "- Cut checkout latency by 20% by moving the payments queue to Kafka.",
+        changeLog: [
+          {
+            bulletId: "b_1_1",
+            original: "Cut checkout latency by 20% by rewriting the payments queue.",
+            rewritten: "Cut checkout latency by 20% by moving the payments queue to Kafka.",
+            reason: "Mirrors the posting's wording.",
+            evidenceIds: ["b_1_1"],
+          },
+        ],
+      },
+      "Kafka",
+    );
+    expect(next.optimizedResume).toBe("- Cut checkout latency by 20% by rewriting the payments queue.");
+    expect(rejectedClaimsStillPresent(next, [{ text: "Kafka", status: "rejected" }])).toEqual([]);
   });
 
   test("leaves bullets alone when the claim only appears inside another token", () => {

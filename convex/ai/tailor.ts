@@ -523,26 +523,25 @@ export type RejectableDraft = {
   }>;
 };
 
-/**
- * Characters that continue a word for claim matching. Dots and at-signs are
- * included so a two-letter claim like "AI" or a number like "20" does not
- * match inside an email address, a domain, a version or a year.
- */
-const CLAIM_WORD_CHARS = "A-Za-z0-9.@";
-
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
+
+/**
+ * What must NOT sit directly before or after a claim for it to count as a
+ * whole word: a letter, digit or at-sign, or a dot that joins two such
+ * characters. That keeps "AI" out of jane@openai.com and "20" out of 2020,
+ * Node.js 20.1 and v1.20, while a sentence-ending period still ends a word.
+ */
+const NOT_WORD_BEFORE = "(?<![A-Za-z0-9@])(?<![A-Za-z0-9]\\.)";
+const NOT_WORD_AFTER = "(?![A-Za-z0-9@])(?!\\.[A-Za-z0-9])";
 
 /** True when the claim appears as a whole word or phrase, not inside another token. */
 export function containsClaim(text: string, claim: string): boolean {
   const needle = claim.trim();
   if (needle.length === 0) return false;
 
-  const pattern = new RegExp(
-    `(?<![${CLAIM_WORD_CHARS}])${escapeRegExp(needle)}(?![${CLAIM_WORD_CHARS}])`,
-    "i",
-  );
+  const pattern = new RegExp(`${NOT_WORD_BEFORE}${escapeRegExp(needle)}${NOT_WORD_AFTER}`, "i");
   return pattern.test(text);
 }
 
