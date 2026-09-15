@@ -9,6 +9,13 @@
  */
 
 import type * as ResendOTP from "../ResendOTP.js";
+import type * as ai_actions from "../ai/actions.js";
+import type * as ai_client from "../ai/client.js";
+import type * as ai_crypto from "../ai/crypto.js";
+import type * as ai_providers from "../ai/providers.js";
+import type * as ai_resolve from "../ai/resolve.js";
+import type * as aiSettings from "../aiSettings.js";
+import type * as apiKeys from "../apiKeys.js";
 import type * as applications from "../applications.js";
 import type * as auth from "../auth.js";
 import type * as draftSupport from "../draftSupport.js";
@@ -29,6 +36,13 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ResendOTP: typeof ResendOTP;
+  "ai/actions": typeof ai_actions;
+  "ai/client": typeof ai_client;
+  "ai/crypto": typeof ai_crypto;
+  "ai/providers": typeof ai_providers;
+  "ai/resolve": typeof ai_resolve;
+  aiSettings: typeof aiSettings;
+  apiKeys: typeof apiKeys;
   applications: typeof applications;
   auth: typeof auth;
   draftSupport: typeof draftSupport;

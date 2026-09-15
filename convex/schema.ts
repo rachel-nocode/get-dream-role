@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 import {
+  aiProvider,
   answerDraft,
   applicationStatus,
   entitlementKind,
@@ -100,6 +101,43 @@ export default defineSchema({
     .index("by_userId", ["userId"])
     .index("by_jobImportId", ["jobImportId"])
     .index("by_user_status", ["userId", "status"]),
+  apiKeys: defineTable({
+    userId: v.id("users"),
+    provider: aiProvider,
+    ciphertext: v.string(),
+    iv: v.string(),
+    keyVersion: v.number(),
+    last4: v.string(),
+    label: v.optional(v.string()),
+    lastValidatedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user_provider", ["userId", "provider"])
+    .index("by_userId", ["userId"]),
+  aiSettings: defineTable({
+    userId: v.id("users"),
+    provider: aiProvider,
+    model: v.string(),
+    dailySubmitCap: v.number(),
+    dailyScoringBudgetUsd: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_userId", ["userId"]),
+  aiUsage: defineTable({
+    userId: v.id("users"),
+    provider: aiProvider,
+    model: v.string(),
+    purpose: v.string(),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costUsd: v.number(),
+    applicationId: v.optional(v.id("applications")),
+    periodKey: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user_period", ["userId", "periodKey"])
+    .index("by_userId", ["userId"]),
   usageEvents: defineTable({
     userId: v.id("users"),
     type: v.string(),

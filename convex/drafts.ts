@@ -1,8 +1,12 @@
+"use node";
+
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { ActionCtx, action } from "./_generated/server";
+import { generateJson, type JsonSchema } from "./ai/client";
+import { resolveUserModel } from "./ai/resolve";
 
 type GeneratedDraft = {
   atsScore: number;
@@ -19,6 +23,40 @@ type GeneratedDraft = {
   }>;
   summary: string;
 };
+
+const DRAFT_SCHEMA: JsonSchema = {
+  type: "object",
+  properties: {
+    atsScore: { type: "number", description: "ATS compatibility from 0 to 100" },
+    matchScore: { type: "number", description: "Keyword match from 0 to 100" },
+    missingKeywords: { type: "array", items: { type: "string" } },
+    presentKeywords: { type: "array", items: { type: "string" } },
+    tailoredBullets: { type: "array", items: { type: "string" } },
+    optimizedResume: { type: "string" },
+    coverLetter: { type: "string" },
+    answerDrafts: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          question: { type: "string" },
+          answer: { type: "string" },
+          required: { type: "boolean" },
+        },
+      },
+    },
+    summary: { type: "string" },
+  },
+};
+
+const SYSTEM_PROMPT = `You are GetDreamRole Apply Copilot. Generate application materials that improve fit while staying honest.
+
+Rules:
+- Never fabricate employers, degrees, titles, metrics, or skills.
+- If a needed detail is absent, phrase it as a suggested placeholder the user should verify.
+- Keep the cover letter human, specific, and under 260 words.
+- Draft application answers only for questions provided by the job board.
+- Scores are integers from 0 to 100.`;
 
 async function requireUserId(ctx: ActionCtx) {
   const userId = await getAuthUserId(ctx);
@@ -72,36 +110,7 @@ function normalizeGeneratedDraft(value: unknown): GeneratedDraft {
   };
 }
 
-function fallbackDraft(args: {
-  resumeSource: string;
-  jobTitle: string;
-  company: string;
-  questions: Array<{ label: string; required: boolean }>;
-}): GeneratedDraft {
-  return {
-    atsScore: 82,
-    matchScore: 78,
-    missingKeywords: ["role-specific tooling", "measurable impact"],
-    presentKeywords: ["collaboration", "execution", "customer outcomes"],
-    tailoredBullets: [
-      `Reframed recent experience around ${args.jobTitle} outcomes at ${args.company}.`,
-      "Pulled measurable impact higher in the bullet structure so a recruiter can scan it fast.",
-      "Mirrored the job language without inventing experience.",
-    ],
-    optimizedResume: `${args.resumeSource}\n\nTAILORED NOTES\n- Emphasize the responsibilities that overlap with ${args.jobTitle}.\n- Add exact tools and measurable outcomes from your real work before submitting.`,
-    coverLetter: `Hi ${args.company} team,\n\nI am excited about the ${args.jobTitle} role because it lines up with the kind of practical, outcome-focused work I want to do next. My background maps well to the posting's mix of execution, communication, and ownership, and I would bring a clear bias toward useful work that moves the team forward.\n\nBest,\n`,
-    answerDrafts: args.questions.map((question) => ({
-      question: question.label,
-      required: question.required,
-      answer:
-        "I would answer this with a concise, specific example from my background and tie it directly to the role requirements.",
-    })),
-    summary:
-      "Demo draft generated because no Groq key is available in Convex. The live version will produce a deeper tailored packet.",
-  };
-}
-
-async function callGroq(args: {
+function buildUserPrompt(args: {
   resumeSource: string;
   jobTitle: string;
   company: string;
@@ -109,33 +118,7 @@ async function callGroq(args: {
   description: string;
   questions: Array<{ label: string; required: boolean }>;
 }) {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    return fallbackDraft(args);
-  }
-
-  const systemPrompt = `You are GetDreamRole Apply Copilot. Generate application materials that improve fit while staying honest.
-
-Return ONLY valid JSON with this exact shape:
-{
-  "atsScore": number,
-  "matchScore": number,
-  "missingKeywords": string[],
-  "presentKeywords": string[],
-  "tailoredBullets": string[],
-  "optimizedResume": string,
-  "coverLetter": string,
-  "answerDrafts": [{ "question": string, "answer": string, "required": boolean }],
-  "summary": string
-}
-
-Rules:
-- Never fabricate employers, degrees, titles, metrics, or skills.
-- If a needed detail is absent, phrase it as a suggested placeholder the user should verify.
-- Keep the cover letter human, specific, and under 260 words.
-- Draft application answers only for questions provided by the job board.`;
-
-  const userPrompt = `JOB
+  return `JOB
 Title: ${args.jobTitle}
 Company: ${args.company}
 Location: ${args.location ?? "Not specified"}
@@ -148,38 +131,6 @@ ${JSON.stringify(args.questions)}
 
 Candidate resume/source material:
 ${args.resumeSource}`;
-
-  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${apiKey}`,
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.35,
-      max_tokens: 4096,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Groq returned ${response.status}. Try again in a minute.`);
-  }
-
-  const data = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-  };
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error("Groq returned an empty draft.");
-  }
-
-  return normalizeGeneratedDraft(JSON.parse(content));
 }
 
 export const generateForJob = action({
@@ -218,23 +169,47 @@ export const generateForJob = action({
       }
     }
 
-    const generated = await callGroq({
-      resumeSource,
-      jobTitle: job.title,
-      company: job.company,
-      location: job.location,
-      description: job.description,
-      questions: job.questions.map((question: Doc<"jobImports">["questions"][number]) => ({
-        label: question.label,
-        required: question.required,
-      })),
+    const resolved = await resolveUserModel(ctx, userId);
+    const completion = await generateJson<unknown>({
+      provider: resolved.provider,
+      model: resolved.model,
+      apiKey: resolved.apiKey,
+      system: SYSTEM_PROMPT,
+      user: buildUserPrompt({
+        resumeSource,
+        jobTitle: job.title,
+        company: job.company,
+        location: job.location,
+        description: job.description,
+        questions: job.questions.map((question: Doc<"jobImports">["questions"][number]) => ({
+          label: question.label,
+          required: question.required,
+        })),
+      }),
+      schema: DRAFT_SCHEMA,
+      schemaName: "application_draft",
+      maxTokens: 4096,
+      temperature: 0.35,
     });
 
-    return (await ctx.runMutation(internal.draftSupport.saveGeneratedDraft, {
+    const saved = (await ctx.runMutation(internal.draftSupport.saveGeneratedDraft, {
       userId,
       jobImportId: args.jobImportId,
       resumeSource,
-      ...generated,
+      ...normalizeGeneratedDraft(completion.data),
     })) as { draftId: Id<"applicationDrafts">; applicationId: Id<"applications"> };
+
+    await ctx.runMutation(internal.aiSettings.recordUsage, {
+      userId,
+      provider: completion.provider,
+      model: completion.model,
+      purpose: "tailor",
+      inputTokens: completion.usage.inputTokens,
+      outputTokens: completion.usage.outputTokens,
+      costUsd: completion.costUsd,
+      applicationId: saved.applicationId,
+    });
+
+    return saved;
   },
 });

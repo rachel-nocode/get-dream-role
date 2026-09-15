@@ -11,6 +11,7 @@ const isProtectedRoute = createRouteMatcher([
   "/dashboard",
   "/jobs/import",
   "/applications(.*)",
+  "/settings/ai",
   "/settings/billing",
 ]);
 

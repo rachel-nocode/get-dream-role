@@ -1,4 +1,5 @@
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
+import type { ProviderId } from "./ai/providers";
 
 export const applicationStatus = v.union(
   v.literal("draft"),
@@ -46,3 +47,22 @@ export const answerDraft = v.object({
   answer: v.string(),
   required: v.boolean(),
 });
+
+export const aiProvider = v.union(
+  v.literal("anthropic"),
+  v.literal("openai"),
+  v.literal("google"),
+  v.literal("groq"),
+  v.literal("openrouter"),
+  v.literal("mistral"),
+  v.literal("deepseek"),
+  v.literal("xai"),
+);
+
+type SameUnion<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
+
+/** Fails to compile if the stored provider union drifts from the registry. */
+export const aiProviderMatchesRegistry: SameUnion<
+  Infer<typeof aiProvider>,
+  ProviderId
+> = true;
