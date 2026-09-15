@@ -27,6 +27,7 @@ import {
   companyKeyFor,
 } from "./lib/caps";
 import {
+  awaitsReply,
   isOpen,
   normalizeStatus,
   statusLabel,
@@ -221,13 +222,17 @@ async function submittedTodayFor(
   userId: Id<"users">,
   now: number,
 ): Promise<number> {
+  // Count by the submit time, not the current stage: an application that
+  // moved on to "interview" the same afternoon still spent today's budget.
   const dayStart = startOfUtcDay(now);
   const submitted = await ctx.db
     .query("applications")
-    .withIndex("by_user_status", (q) => q.eq("userId", userId).eq("status", "submitted"))
+    .withIndex("by_user_submittedAt", (q) =>
+      q.eq("userId", userId).gte("submittedAt", dayStart),
+    )
     .collect();
 
-  return submitted.filter((application) => (application.submittedAt ?? 0) >= dayStart).length;
+  return submitted.length;
 }
 
 /** What the apply kit shows next to "Mark submitted". */
@@ -487,6 +492,15 @@ export const saveFollowup = internalMutation({
     const application = await ctx.db.get(args.applicationId);
     if (!application || application.userId !== args.userId) {
       throw new Error("Application not found.");
+    }
+
+    // The action checked these before it spent a model call, but this mutation
+    // is the transaction, so two overlapping drafts cannot both get through.
+    if (!awaitsReply(application.status)) {
+      throw new Error("This application is not waiting on a reply, so there is nothing to follow up.");
+    }
+    if ((application.followupCount ?? 0) >= MAX_FOLLOWUPS) {
+      throw new Error(`This application already has its ${MAX_FOLLOWUPS} follow-ups.`);
     }
 
     const now = Date.now();

@@ -109,3 +109,10 @@ const APPLIED_STATUSES = new Set<string>([
 export function hasApplied(status: StoredStatus): boolean {
   return APPLIED_STATUSES.has(normalizeStatus(status));
 }
+
+/** Stages where the employer still owes a reply, so a follow-up makes sense. */
+const AWAITING_REPLY_STATUSES = new Set<string>(["submitted", "interview"]);
+
+export function awaitsReply(status: StoredStatus): boolean {
+  return AWAITING_REPLY_STATUSES.has(normalizeStatus(status));
+}

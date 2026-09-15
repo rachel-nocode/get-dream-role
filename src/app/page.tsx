@@ -39,7 +39,7 @@ const homepageFaqs = [
   {
     question: "Is my resume data secure?",
     answer:
-      "Your resume is processed in memory and is not stored after analysis is complete. We do not sell or share your personal information.",
+      "The free checker processes your resume in memory and does not keep it. If you sign in and build a master profile, the resume text you paste and the facts parsed from it are stored in your account so the agent can cite them, and you can delete that profile from the Profile page at any time. Your AI key is encrypted at rest and only decrypted inside the backend call that uses it. We do not sell or share your personal information.",
   },
   {
     question: "Can I use GetDreamRole for cover letters or LinkedIn?",

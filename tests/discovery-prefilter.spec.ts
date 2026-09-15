@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   NEUTRAL_PREFERENCES,
   NO_PROFILE_MAX_SCORE,
+  NO_TITLE_MATCH_MAX_SCORE,
   PREFILTER_LLM_THRESHOLD,
   dedupeKey,
   prefilterBreakdown,
@@ -112,6 +113,21 @@ test.describe("prefilter scoring", () => {
     );
     expect(weak).toBeLessThan(PREFILTER_LLM_THRESHOLD);
     expect(prefilterScore(job(), preferences, NOW)).toBeGreaterThan(PREFILTER_LLM_THRESHOLD);
+  });
+
+  test("a remote posting with no title overlap never reaches the model", () => {
+    // Location, recency and salary alone would add up to 50 here.
+    const unrelated = job({ title: "Warehouse Associate", remote: true, salaryMin: 150_000 });
+    const breakdown = prefilterBreakdown(unrelated, preferences, NOW);
+
+    expect(breakdown.title).toBe(0);
+    expect(breakdown.total).toBe(NO_TITLE_MATCH_MAX_SCORE);
+    expect(breakdown.total).toBeLessThan(PREFILTER_LLM_THRESHOLD);
+  });
+
+  test("the title ceiling does not apply when no target titles are set", () => {
+    const total = prefilterBreakdown(job({ title: "Warehouse Associate" }), NEUTRAL_PREFERENCES, NOW).total;
+    expect(total).toBeGreaterThan(NO_TITLE_MATCH_MAX_SCORE);
   });
 });
 

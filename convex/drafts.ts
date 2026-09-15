@@ -10,7 +10,12 @@ import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
 import { PROVIDERS, estimateCostPerApplication, findModel } from "./ai/providers";
-import { NEEDS_ANSWER, computeAtsScore } from "./ai/tailor";
+import {
+  NEEDS_ANSWER,
+  applyClaimRejection,
+  computeAtsScore,
+  rejectedClaimsStillPresent,
+} from "./ai/tailor";
 import { resolveModelForUser } from "./aiSettings";
 import { logActivity } from "./applications";
 import { hasApplied } from "./lib/status";
@@ -109,9 +114,32 @@ export const resolveClaim = mutation({
     );
     const pending = updated.filter((entry) => entry.status === "pending").length;
 
+    // A rejected claim leaves the text, not just the list: the bullet goes
+    // back to the user's wording and the sentence that carried it is dropped.
+    const reverted =
+      args.status === "rejected"
+        ? applyClaimRejection(
+            {
+              optimizedResume: draft.optimizedResume,
+              coverLetter: draft.coverLetter,
+              summary: draft.summary,
+              changeLog: draft.changeLog ?? [],
+            },
+            claim.text,
+          )
+        : null;
+
     await ctx.db.patch(draft._id, {
       flaggedClaims: updated,
       atsScore: computeAtsScore(draft.verifierReport?.issues.length ?? 0, pending),
+      ...(reverted
+        ? {
+            ...reverted,
+            tailoredBullets: reverted.changeLog
+              .filter((entry) => entry.rewritten !== entry.original)
+              .map((entry) => entry.rewritten),
+          }
+        : {}),
       updatedAt: now,
     });
 
@@ -124,7 +152,7 @@ export const resolveClaim = mutation({
         message:
           args.status === "confirmed"
             ? `Confirmed the flagged claim "${claim.text}".`
-            : `Rejected the flagged claim "${claim.text}".`,
+            : `Rejected the flagged claim "${claim.text}" and took it back out of the kit.`,
       });
     }
 
@@ -182,6 +210,17 @@ export const approve = mutation({
 
     if (pending > 0 || unanswered > 0) {
       throw new Error(blockingMessage(pending, unanswered));
+    }
+
+    // Belt and braces: a rejected claim must be gone from the text, not only
+    // marked. If the revert could not find it, the kit needs regenerating.
+    const lingering = rejectedClaimsStillPresent(draft, draft.flaggedClaims ?? []);
+    if (lingering.length > 0) {
+      throw new Error(
+        `Regenerate the apply kit: the rejected claim${lingering.length === 1 ? "" : "s"} ${lingering
+          .map((text) => `"${text}"`)
+          .join(", ")} still appear${lingering.length === 1 ? "s" : ""} in the text.`,
+      );
     }
 
     const now = Date.now();

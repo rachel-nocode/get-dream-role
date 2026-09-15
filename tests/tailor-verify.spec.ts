@@ -2,11 +2,13 @@ import { expect, test } from "@playwright/test";
 import {
   NEEDS_ANSWER,
   answerBankKeyFor,
+  applyClaimRejection,
   buildFactRegistry,
   computeAtsScore,
   computeMatchScore,
   filterEvidenceIds,
   reassembleResume,
+  rejectedClaimsStillPresent,
   resolveBankAnswer,
   stripJobBoilerplate,
   type ProfileFacts,
@@ -338,6 +340,78 @@ test.describe("answer bank", () => {
     expect(resolved?.answer).toBe(NEEDS_ANSWER);
     expect(resolved?.confidence).toBe("low");
     expect(resolved?.needsHuman).toBeTruthy();
+  });
+
+  test("maps only a generic experience question to the total years", () => {
+    expect(answerBankKeyFor("How many years of experience do you have?")).toBe("years_experience");
+    expect(answerBankKeyFor("Years of professional work experience")).toBe("years_experience");
+    expect(answerBankKeyFor("How many years of React experience do you have?")).toBeNull();
+    expect(answerBankKeyFor("How many years of experience with React do you have?")).toBeNull();
+    expect(answerBankKeyFor("Years of experience in data engineering")).toBeNull();
+    expect(answerBankKeyFor("How many years have you used Kubernetes?")).toBeNull();
+  });
+
+  test("hands a skill-specific years question to the user instead of the total", () => {
+    const totalYears: AnswerBankEntry[] = [
+      { id: "ans_years", key: "years_experience", question: "Years of experience", answer: "8" },
+    ];
+    const resolved = resolveBankAnswer("How many years of React experience do you have?", totalYears);
+
+    expect(resolved?.answer).toBe(NEEDS_ANSWER);
+    expect(resolved?.confidence).toBe("low");
+    expect(resolved?.sourceKey).toBeUndefined();
+    expect(resolved?.needsHuman).toBeTruthy();
+
+    const generic = resolveBankAnswer("How many years of experience do you have?", totalYears);
+    expect(generic?.answer).toBe("8");
+    expect(generic?.sourceKey).toBe("years_experience");
+  });
+});
+
+test.describe("rejected claims", () => {
+  const draft = {
+    optimizedResume: [
+      "Jane Doe",
+      "",
+      "SUMMARY",
+      "Backend engineer who ships Kafka pipelines.",
+      "",
+      "EXPERIENCE",
+      "Backend Engineer — Northwind",
+      "- Cut checkout latency by 20% by moving the payments queue to Kafka",
+      "- Mentored three junior engineers through their first on-call rotation",
+    ].join("\n"),
+    coverLetter: "I run Kafka pipelines at Northwind. I would like to do the same for you.",
+    summary: "Backend engineer who ships Kafka pipelines.",
+    changeLog: [
+      {
+        bulletId: "b_1_1",
+        original: "Cut checkout latency by 20% by rewriting the payments queue",
+        rewritten: "Cut checkout latency by 20% by moving the payments queue to Kafka",
+        reason: "Mirrors the posting's wording.",
+        evidenceIds: ["b_1_1"],
+      },
+    ],
+  };
+
+  test("takes the claim out of the bullet, the summary and the cover letter", () => {
+    const next = applyClaimRejection(draft, "Kafka");
+
+    expect(next.optimizedResume).toContain("- Cut checkout latency by 20% by rewriting the payments queue");
+    expect(next.optimizedResume).not.toContain("Kafka");
+    expect(next.optimizedResume).not.toContain("SUMMARY");
+    expect(next.summary).toBe("");
+    expect(next.coverLetter).toBe("I would like to do the same for you.");
+    expect(next.changeLog[0].rewritten).toBe(next.changeLog[0].original);
+    expect(next.changeLog[0].evidenceIds).toEqual([]);
+    expect(rejectedClaimsStillPresent(next, [{ text: "Kafka", status: "rejected" }])).toEqual([]);
+  });
+
+  test("reports a rejected claim that is still in the text", () => {
+    expect(rejectedClaimsStillPresent(draft, [{ text: "Kafka", status: "rejected" }])).toEqual([
+      "Kafka",
+    ]);
+    expect(rejectedClaimsStillPresent(draft, [{ text: "Kafka", status: "confirmed" }])).toEqual([]);
   });
 });
 

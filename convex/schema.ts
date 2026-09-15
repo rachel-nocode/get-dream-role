@@ -113,6 +113,7 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_user_status", ["userId", "status"])
+    .index("by_user_status_prefilter", ["userId", "status", "prefilterScore"])
     .index("by_user_kind_external", ["userId", "kind", "externalId"]),
   entitlements: defineTable({
     userId: v.optional(v.id("users")),
@@ -202,7 +203,8 @@ export default defineSchema({
   })
     .index("by_userId", ["userId"])
     .index("by_jobImportId", ["jobImportId"])
-    .index("by_user_status", ["userId", "status"]),
+    .index("by_user_status", ["userId", "status"])
+    .index("by_user_submittedAt", ["userId", "submittedAt"]),
   activityLog: defineTable({
     userId: v.id("users"),
     applicationId: v.id("applications"),

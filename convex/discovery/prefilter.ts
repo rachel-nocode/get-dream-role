@@ -13,6 +13,13 @@ export const PREFILTER_LLM_THRESHOLD = 35;
 /** Ceiling applied while the user has no profile, so nothing looks certain. */
 export const NO_PROFILE_MAX_SCORE = 40;
 
+/**
+ * Ceiling for a posting whose title shares nothing with any target title.
+ * Location, recency and salary alone would otherwise lift an unrelated remote
+ * posting over the threshold and spend the scoring budget on it.
+ */
+export const NO_TITLE_MATCH_MAX_SCORE = 30;
+
 export const DEFAULT_SCORE_BATCH = 15;
 export const MAX_SCORE_BATCH = 30;
 
@@ -155,12 +162,15 @@ export function prefilterBreakdown(
   const recency = recencyScore(job, now);
   const salary = salaryScore(job, preferences);
 
+  const hasTargets = preferences.targetTitles.some((entry) => entry.trim().length > 0);
+  const ceiling = hasTargets && title === 0 ? NO_TITLE_MATCH_MAX_SCORE : 100;
+
   return {
     title,
     location,
     recency,
     salary,
-    total: Math.max(0, Math.min(100, title + location + recency + salary)),
+    total: Math.max(0, Math.min(ceiling, title + location + recency + salary)),
   };
 }
 

@@ -8,6 +8,7 @@ import {
 import {
   PIPELINE_STATUSES,
   TERMINAL_STATUSES,
+  awaitsReply,
   isOpen,
   normalizeStatus,
 } from "../convex/lib/status";
@@ -49,6 +50,15 @@ test.describe("status normalization", () => {
     for (const status of TERMINAL_STATUSES) {
       expect(isOpen(status)).toBe(false);
     }
+  });
+
+  test("a follow-up only makes sense while a reply is still owed", () => {
+    expect(awaitsReply("submitted")).toBe(true);
+    expect(awaitsReply("interview")).toBe(true);
+    expect(awaitsReply("approved")).toBe(false);
+    expect(awaitsReply("offer")).toBe(false);
+    expect(awaitsReply("rejected")).toBe(false);
+    expect(awaitsReply("ghosted")).toBe(false);
   });
 });
 

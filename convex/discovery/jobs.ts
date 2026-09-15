@@ -71,18 +71,13 @@ async function ownedJob(ctx: MutationCtx, userId: Id<"users">, jobId: Id<"discov
   return job;
 }
 
-/** Discovered jobs keep the board they came from; feeds share one source. */
+/**
+ * An imported job keeps exactly the source it came from. External ids are
+ * only unique within one board or feed, so collapsing feeds together would
+ * let two different postings share one import row.
+ */
 function importSourceFor(kind: JobSourceKind): JobSource {
-  switch (kind) {
-    case "greenhouse":
-    case "lever":
-    case "ashby":
-    case "smartrecruiters":
-    case "recruitee":
-      return kind;
-    default:
-      return "feed";
-  }
+  return kind;
 }
 
 function byScoreDescending(a: Doc<"discoveredJobs">, b: Doc<"discoveredJobs">): number {
@@ -256,14 +251,18 @@ export const upsertBatch = internalMutation({
 export const listForScoring = internalQuery({
   args: { userId: v.id("users"), limit: v.number(), threshold: v.number() },
   handler: async (ctx: QueryCtx, args) => {
+    // Range over the prefilter score so jobs under the threshold, which stay
+    // "new" forever, can never crowd out a strong posting that arrived later.
     const candidates = await ctx.db
       .query("discoveredJobs")
-      .withIndex("by_user_status", (q) => q.eq("userId", args.userId).eq("status", "new"))
+      .withIndex("by_user_status_prefilter", (q) =>
+        q.eq("userId", args.userId).eq("status", "new").gte("prefilterScore", args.threshold),
+      )
+      .order("desc")
       .take(SCORING_CANDIDATE_CAP);
 
     return candidates
-      .filter((job) => job.fitScore === undefined && job.prefilterScore >= args.threshold)
-      .sort((a, b) => b.prefilterScore - a.prefilterScore)
+      .filter((job) => job.fitScore === undefined)
       .slice(0, Math.max(0, Math.round(args.limit)))
       .map((job) => ({
         id: job._id,

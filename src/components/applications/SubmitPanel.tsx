@@ -12,6 +12,7 @@ import {
 import type { Doc } from "@convex/_generated/dataModel";
 import {
   STATUS_LABELS,
+  awaitsReply,
   hasApplied,
   isManualStatus,
   type ManualStatus,
@@ -479,7 +480,7 @@ export default function SubmitPanel({
         </div>
       </div>
 
-      {submitted ? (
+      {awaitsReply(status) ? (
         <FollowupSection
           tracking={tracking}
           latestFollowup={latestFollowup}

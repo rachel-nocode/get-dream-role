@@ -34,7 +34,9 @@ export default function PrivacyPage() {
             GetDreamRole collects only the information necessary to provide our resume optimization service:
           </p>
           <ul className="list-disc pl-5 mt-3 space-y-1">
-            <li>Resume text you upload (processed in-memory, not permanently stored)</li>
+            <li>Resume text you upload to the free checker (processed in memory, not stored)</li>
+            <li>If you sign in and build a master profile: the resume text you paste, the facts parsed from it, your job preferences, screening answers, watched job boards, and the applications you track, stored in your account until you delete them</li>
+            <li>AI provider keys you add, encrypted at rest and decrypted only inside the backend call that uses them</li>
             <li>Job descriptions you paste into the tool</li>
             <li>Payment information processed securely through Stripe — we never see or store your card details</li>
             <li>Browser storage data (localStorage/sessionStorage) used to persist your session on your device</li>
@@ -57,7 +59,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-display text-lg font-semibold text-forge-text mb-3">3. Data Retention</h2>
           <p>
-            Resume content and job descriptions are processed in real-time and are not permanently stored on our servers. Analysis results are stored temporarily in your browser&apos;s sessionStorage and are cleared when you close your browser tab.
+            The free checker processes resume content and job descriptions in real time and does not keep them; its results are held in your browser&apos;s sessionStorage and cleared when you close the tab. A signed-in master profile, the apply kits generated from it, and your application tracker are stored in your account so the agent can cite your own facts, and they stay until you delete them. You can delete your profile, including the stored resume text, from the Profile page at any time.
           </p>
         </section>
 
@@ -82,7 +84,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="font-display text-lg font-semibold text-forge-text mb-3">6. Your Rights</h2>
           <p>
-            Since we do not maintain a user account system or persistent database of personal information, there is no stored profile to access or delete. Your resume data lives only in your browser session.
+            If you use the free checker without signing in, your resume data lives only in your browser session and there is nothing stored for us to access or delete. If you sign in, you can view and edit everything stored about you on the Profile, Jobs and Applications pages, remove any AI key from Settings, and delete your profile with its resume text from the Profile page. Email us to have the rest of your account removed.
           </p>
         </section>
 

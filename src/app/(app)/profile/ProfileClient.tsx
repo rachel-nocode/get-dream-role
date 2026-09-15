@@ -34,6 +34,7 @@ export default function ProfileClient() {
   const upsert = useMutation(api.careerProfile.upsert);
   const confirmProfile = useMutation(api.careerProfile.confirm);
   const updateAnswer = useMutation(api.careerProfile.updateAnswer);
+  const removeProfile = useMutation(api.careerProfile.remove);
 
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
@@ -113,6 +114,28 @@ export default function ProfileClient() {
             <Link href="/jobs" className="text-sm text-forge-accent hover:text-forge-accent-hover">
               Go to job discovery
             </Link>
+            {profile ? (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      "Delete your stored profile, including the resume text? Apply kits you already generated keep their own copy.",
+                    )
+                  ) {
+                    return;
+                  }
+                  void guard(async () => {
+                    await removeProfile({});
+                    return "Profile deleted. Your resume text is no longer stored.";
+                  });
+                }}
+                className="text-sm text-forge-danger hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Delete profile
+              </button>
+            ) : null}
           </div>
         </section>
 

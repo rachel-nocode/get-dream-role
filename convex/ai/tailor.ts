@@ -427,9 +427,22 @@ export const ANSWER_KEY_MATCHERS: ReadonlyArray<{ key: string; pattern: RegExp }
   { key: "salary_expectation", pattern: /salary|compensation|pay expectation|desired pay/i },
   { key: "referral_source", pattern: /hear about|referral|refer(red)? (you|by)|how did you find/i },
   { key: "highest_degree", pattern: /degree/i },
-  { key: "years_experience", pattern: /years/i },
+  // Only the generic total: "years of React experience" is a different fact,
+  // and answering it with the overall figure would put a false number on the form.
+  {
+    key: "years_experience",
+    // "years of experience with React" names a skill after the noun; leave it out too.
+    pattern:
+      /\byears?\s+(?:of\s+)?(?:(?:total|overall|professional|relevant|work|industry|paid|full[- ]time)\s+)*(?:work\s+)?experience\b(?!\s+(?:with|in|using|on|of|as)\b)/i,
+  },
   { key: "start_date", pattern: /start date|when (can|could) you start|how soon|earliest start|available to start/i },
 ];
+
+/** A question about how long the candidate has used one particular skill. */
+const SKILL_YEARS_PATTERN = /\b(?:years?|how long|how many years)\b/i;
+
+export const SKILL_YEARS_HUMAN =
+  "How long you have used a specific skill is yours to state; the profile does not track it.";
 
 /** The answer bank key a job board question maps to, or null for a draft. */
 export function answerBankKeyFor(question: string): string | null {
@@ -445,7 +458,8 @@ export const BANK_ANSWER_MISSING = "Your answer bank has no answer for this yet.
 export type BankAnswer = {
   answer: string;
   confidence: AnswerConfidence;
-  sourceKey: string;
+  /** The answer bank entry used, when the question maps to one. */
+  sourceKey?: string;
   /** Set when the answer is the user's to give, never a model's. */
   needsHuman?: string;
 };
@@ -453,14 +467,19 @@ export type BankAnswer = {
 /**
  * What the answer bank says about one screening question, or null when the
  * question is not one of the answers we refuse to guess. A bank entry the user
- * has not filled in comes back as their job, not as a drafted guess.
+ * has not filled in comes back as their job, not as a drafted guess, and so
+ * does a question about years with a specific skill, which no bank entry holds.
  */
 export function resolveBankAnswer(
   question: string,
   bank: readonly AnswerBankEntry[],
 ): BankAnswer | null {
   const sourceKey = answerBankKeyFor(question);
-  if (sourceKey === null) return null;
+  if (sourceKey === null) {
+    return SKILL_YEARS_PATTERN.test(question)
+      ? { answer: NEEDS_ANSWER, confidence: "low", needsHuman: SKILL_YEARS_HUMAN }
+      : null;
+  }
 
   const answer = answerBankValue(bank, sourceKey);
   return answer.length > 0
@@ -486,4 +505,97 @@ export function coerceToOption(answer: string, options: readonly string[]): stri
 export function clampWords(text: string, maxWords: number): string {
   const words = text.trim().split(/\s+/).filter((word) => word.length > 0);
   return words.length <= maxWords ? text.trim() : `${words.slice(0, maxWords).join(" ")}...`;
+}
+
+// --- rejected claims --------------------------------------------------------
+
+/** The generated text a rejected claim has to leave. */
+export type RejectableDraft = {
+  optimizedResume: string;
+  coverLetter: string;
+  summary: string;
+  changeLog: Array<{
+    bulletId?: string;
+    original: string;
+    rewritten: string;
+    reason: string;
+    evidenceIds: string[];
+  }>;
+};
+
+export function containsClaim(text: string, claim: string): boolean {
+  const needle = claim.trim().toLowerCase();
+  return needle.length > 0 && text.toLowerCase().includes(needle);
+}
+
+function withoutSentencesMentioning(text: string, claim: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) =>
+      paragraph
+        .split(/(?<=[.!?])\s+/)
+        .filter((sentence) => !containsClaim(sentence, claim))
+        .join(" ")
+        .trim(),
+    )
+    .filter((paragraph) => paragraph.length > 0)
+    .join("\n\n");
+}
+
+/** Plain replacement: a function replacer keeps "$" in resume text literal. */
+function replaceOnce(text: string, needle: string, replacement: string): string {
+  return needle.length === 0 ? text : text.replace(needle, () => replacement);
+}
+
+/**
+ * Takes a claim the user rejected back out of everything that was generated:
+ * a bullet that carried it returns to the user's own wording, and a summary or
+ * cover letter sentence that carried it is dropped. Approval checks afterwards
+ * that nothing slipped through.
+ */
+export function applyClaimRejection(draft: RejectableDraft, claim: string): RejectableDraft {
+  let optimizedResume = draft.optimizedResume;
+
+  const changeLog = draft.changeLog.map((entry) => {
+    if (entry.rewritten === entry.original || !containsClaim(entry.rewritten, claim)) {
+      return entry;
+    }
+    optimizedResume = replaceOnce(optimizedResume, `- ${entry.rewritten}`, `- ${entry.original}`);
+    return {
+      ...entry,
+      rewritten: entry.original,
+      evidenceIds: [],
+      reason: `Reverted to your wording: you rejected "${claim}".`,
+    };
+  });
+
+  let summary = draft.summary;
+  if (containsClaim(summary, claim)) {
+    const next = withoutSentencesMentioning(summary, claim);
+    optimizedResume = replaceOnce(
+      optimizedResume,
+      `SUMMARY\n${summary}`,
+      next.length > 0 ? `SUMMARY\n${next}` : "",
+    )
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+    summary = next;
+  }
+
+  const coverLetter = containsClaim(draft.coverLetter, claim)
+    ? withoutSentencesMentioning(draft.coverLetter, claim)
+    : draft.coverLetter;
+
+  return { optimizedResume, coverLetter, summary, changeLog };
+}
+
+/** Rejected claims whose text is still somewhere in the generated output. */
+export function rejectedClaimsStillPresent(
+  draft: Pick<RejectableDraft, "optimizedResume" | "coverLetter" | "summary">,
+  claims: ReadonlyArray<{ text: string; status: string }>,
+): string[] {
+  const texts = [draft.optimizedResume, draft.coverLetter, draft.summary];
+  return claims
+    .filter((claim) => claim.status === "rejected" && texts.some((text) => containsClaim(text, claim.text)))
+    .map((claim) => claim.text);
 }

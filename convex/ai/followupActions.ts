@@ -12,7 +12,7 @@ import { internal } from "../_generated/api";
 import type { Id } from "../_generated/dataModel";
 import { ActionCtx, action } from "../_generated/server";
 import { MAX_FOLLOWUPS } from "../lib/caps";
-import { hasApplied } from "../lib/status";
+import { awaitsReply } from "../lib/status";
 import { generateJson } from "./client";
 import {
   FOLLOWUP_MAX_TOKENS,
@@ -67,8 +67,10 @@ export const draftFollowup = action({
     if (!application) {
       throw new Error("Application not found.");
     }
-    if (!hasApplied(application.status)) {
-      throw new Error("Mark this one submitted before you follow up on it.");
+    if (!awaitsReply(application.status)) {
+      throw new Error(
+        "Follow-ups only make sense while you are waiting to hear back: mark this one submitted first, or leave a closed application closed.",
+      );
     }
     if (application.followupCount >= MAX_FOLLOWUPS) {
       throw new Error(

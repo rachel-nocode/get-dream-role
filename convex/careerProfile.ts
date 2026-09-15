@@ -282,6 +282,22 @@ export const confirm = mutation({
   },
 });
 
+/**
+ * Deletes the stored profile, including the source resume text. Apply kits
+ * already generated keep their own copy of what they were built from.
+ */
+export const remove = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    const existing = await profileForUser(ctx, userId);
+    if (!existing) return false;
+
+    await ctx.db.delete(existing._id);
+    return true;
+  },
+});
+
 export const updateAnswer = mutation({
   args: { key: v.string(), answer: v.string() },
   handler: async (ctx, args) => {

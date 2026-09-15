@@ -83,6 +83,13 @@ export const jobSource = v.union(
   v.literal("ashby"),
   v.literal("smartrecruiters"),
   v.literal("recruitee"),
+  // Feeds keep their own source: external ids are only unique per feed.
+  v.literal("remotive"),
+  v.literal("remoteok"),
+  v.literal("arbeitnow"),
+  v.literal("jobicy"),
+  v.literal("himalayas"),
+  // Rows imported before feeds were told apart.
   v.literal("feed"),
 );
 
