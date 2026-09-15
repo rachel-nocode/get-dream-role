@@ -11,6 +11,11 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import {
+  completionTokenLimit,
+  shouldFallbackToJsonObject,
+  usesGptOssReasoning,
+} from "./limits";
+import {
   PROVIDERS,
   estimateCostUsd,
   findModel,
@@ -18,6 +23,8 @@ import {
   type ProviderId,
   type ProviderInfo,
 } from "./providers";
+
+export { completionTokenLimit, shouldFallbackToJsonObject } from "./limits";
 
 export type AiErrorKind = "auth" | "rate_limit" | "provider" | "parse";
 
@@ -185,8 +192,8 @@ async function callOpenAiCompatible(call: ProviderCall): Promise<RawCompletion> 
 
   let attempt = await postChatCompletion(call, config, wantsSchema ? "json_schema" : "json_object");
 
-  // Some deployments accept the model but not strict schemas; fall back once.
-  if (attempt.status === 400 && wantsSchema && mentionsResponseFormat(attempt.bodyText)) {
+  // Schema 400s are not always worded as a response_format problem (Groq).
+  if (shouldFallbackToJsonObject(attempt.status, wantsSchema)) {
     attempt = await postChatCompletion(call, config, "json_object");
   }
 
@@ -249,12 +256,18 @@ async function postChatCompletion(
           }
         : { type: "json_object" },
     // GPT-5 era OpenAI models renamed this field; everyone else kept max_tokens.
-    [call.provider === "openai" ? "max_completion_tokens" : "max_tokens"]: call.maxTokens,
+    [call.provider === "openai" ? "max_completion_tokens" : "max_tokens"]:
+      completionTokenLimit(call.provider, call.maxTokens),
   };
 
   // OpenAI's current models only accept the default temperature.
   if (call.temperature !== undefined && call.provider !== "openai") {
     body.temperature = call.temperature;
+  }
+
+  // Default medium reasoning eats the JSON budget on extract/cover/score.
+  if (usesGptOssReasoning(call.provider, call.model)) {
+    body.reasoning_effort = "low";
   }
 
   let response: Response;
@@ -281,10 +294,6 @@ function authHeaders(config: ProviderInfo, apiKey: string): Record<string, strin
 /** Headers for the validation ping: providers keyed by query string send none. */
 function validateHeaders(config: ProviderInfo, apiKey: string): Record<string, string> {
   return config.validateAuth === "query" ? {} : authHeaders(config, apiKey);
-}
-
-function mentionsResponseFormat(bodyText: string): boolean {
-  return bodyText.toLowerCase().includes("response_format");
 }
 
 function parseJsonPayload<T>(text: string, config: ProviderInfo): T {
