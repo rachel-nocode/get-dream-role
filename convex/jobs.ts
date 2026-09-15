@@ -11,11 +11,13 @@ import {
   query,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { fetchAshbyBoard, normalizeAshbyJob } from "./discovery/fetchers";
+import { humanizeSlug, stripHtml } from "./lib/html";
 import { parseJobUrl } from "./lib/jobUrls";
-import { jobQuestion, jobSource } from "./validators";
+import { jobQuestion, jobSource, type JobQuestion, type JobSource } from "./validators";
 
 type ImportedJob = {
-  source: "greenhouse" | "lever";
+  source: JobSource;
   url: string;
   externalId: string;
   boardToken?: string;
@@ -25,15 +27,7 @@ type ImportedJob = {
   location?: string;
   description: string;
   applyUrl: string;
-  questions: Array<{
-    label: string;
-    required: boolean;
-    fields: Array<{
-      name: string;
-      type: string;
-      options: Array<{ label: string; value: string }>;
-    }>;
-  }>;
+  questions: JobQuestion[];
 };
 
 async function requireUserId(ctx: ActionCtx) {
@@ -42,33 +36,6 @@ async function requireUserId(ctx: ActionCtx) {
     throw new Error("Sign in to import jobs.");
   }
   return userId;
-}
-
-function decodeHtml(value: string) {
-  return value
-    .replaceAll("&amp;", "&")
-    .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">")
-    .replaceAll("&quot;", '"')
-    .replaceAll("&#39;", "'")
-    .replaceAll("&nbsp;", " ");
-}
-
-function stripHtml(value: string) {
-  return decodeHtml(value)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|li|h[1-6]|div)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .trim();
-}
-
-function humanizeToken(value: string) {
-  return value
-    .replace(/[-_]+/g, " ")
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function normalizeGreenhouseQuestions(rawQuestions: unknown) {
@@ -142,7 +109,7 @@ async function importGreenhouse(parsed: ReturnType<typeof parseJobUrl>): Promise
     externalId: parsed.jobId,
     boardToken: parsed.boardToken,
     title: String(data.title ?? "Untitled role"),
-    company: humanizeToken(parsed.boardToken),
+    company: humanizeSlug(parsed.boardToken),
     location,
     description: stripHtml(String(data.content ?? "")),
     applyUrl: String(data.absolute_url ?? parsed.applyUrl),
@@ -183,12 +150,45 @@ async function importLever(parsed: ReturnType<typeof parseJobUrl>): Promise<Impo
     externalId: parsed.postingId,
     leverSite: parsed.site,
     title: String(data.text ?? "Untitled role"),
-    company: humanizeToken(parsed.site),
+    company: humanizeSlug(parsed.site),
     location: String(categories.location ?? ""),
     description: description || stripHtml(String(data.description ?? "")),
     applyUrl: String(data.applyUrl ?? `${parsed.applyUrl.replace(/\/apply$/, "")}/apply`),
     questions: [],
   };
+}
+
+/** Ashby has no single-posting endpoint, so we read the board and pick it. */
+async function importAshby(parsed: ReturnType<typeof parseJobUrl>): Promise<ImportedJob> {
+  if (parsed.source !== "ashby") {
+    throw new Error("Expected an Ashby URL.");
+  }
+
+  const postings = await fetchAshbyBoard(parsed.org);
+  const posting = postings.find((entry) => String(entry.id ?? "") === parsed.jobId);
+  if (!posting) {
+    throw new Error("That Ashby posting is no longer on the public job board.");
+  }
+
+  const job = normalizeAshbyJob(posting, parsed.org);
+
+  return {
+    source: "ashby",
+    url: job.url || parsed.applyUrl,
+    externalId: job.externalId,
+    title: job.title,
+    company: job.company,
+    location: job.location,
+    description: job.description,
+    applyUrl: job.applyUrl || parsed.applyUrl,
+    questions: [],
+  };
+}
+
+async function importParsedJob(parsed: ReturnType<typeof parseJobUrl>): Promise<ImportedJob> {
+  if (parsed.source === "greenhouse") return await importGreenhouse(parsed);
+  if (parsed.source === "lever") return await importLever(parsed);
+  return await importAshby(parsed);
 }
 
 export const importFromUrl = action({
@@ -198,11 +198,7 @@ export const importFromUrl = action({
     args,
   ): Promise<{ jobImportId: Id<"jobImports">; applicationId: Id<"applications"> }> => {
     const userId = await requireUserId(ctx);
-    const parsed = parseJobUrl(args.url);
-    const job =
-      parsed.source === "greenhouse"
-        ? await importGreenhouse(parsed)
-        : await importLever(parsed);
+    const job = await importParsedJob(parseJobUrl(args.url));
 
     return (await ctx.runMutation(internal.jobs.saveImportedJob, {
       userId,
@@ -210,6 +206,71 @@ export const importFromUrl = action({
     })) as { jobImportId: Id<"jobImports">; applicationId: Id<"applications"> };
   },
 });
+
+export type SaveImportedJobArgs = ImportedJob & { userId: Id<"users"> };
+
+/**
+ * Upserts an imported job and its draft application. Shared by the URL
+ * importer and by the discovery queue, which both land in the same place.
+ */
+export async function saveImportedJobRow(
+  ctx: MutationCtx,
+  args: SaveImportedJobArgs,
+): Promise<{ jobImportId: Id<"jobImports">; applicationId: Id<"applications"> }> {
+  const now = Date.now();
+  const existingJob = await ctx.db
+    .query("jobImports")
+    .withIndex("by_user_source_external", (q) =>
+      q
+        .eq("userId", args.userId)
+        .eq("source", args.source)
+        .eq("externalId", args.externalId),
+    )
+    .first();
+
+  const patch = {
+    source: args.source,
+    url: args.url,
+    externalId: args.externalId,
+    boardToken: args.boardToken,
+    leverSite: args.leverSite,
+    title: args.title,
+    company: args.company,
+    location: args.location,
+    description: args.description,
+    applyUrl: args.applyUrl,
+    questions: args.questions,
+    updatedAt: now,
+  };
+
+  const jobImportId =
+    existingJob === null
+      ? await ctx.db.insert("jobImports", {
+          userId: args.userId,
+          createdAt: now,
+          ...patch,
+        })
+      : (await ctx.db.patch(existingJob._id, patch), existingJob._id);
+
+  const existingApplication = await ctx.db
+    .query("applications")
+    .withIndex("by_jobImportId", (q) => q.eq("jobImportId", jobImportId))
+    .filter((q) => q.eq(q.field("userId"), args.userId))
+    .first();
+
+  const applicationId =
+    existingApplication === null
+      ? await ctx.db.insert("applications", {
+          userId: args.userId,
+          jobImportId,
+          status: "draft",
+          createdAt: now,
+          updatedAt: now,
+        })
+      : existingApplication._id;
+
+  return { jobImportId, applicationId };
+}
 
 export const saveImportedJob = internalMutation({
   args: {
@@ -226,61 +287,7 @@ export const saveImportedJob = internalMutation({
     applyUrl: v.string(),
     questions: v.array(jobQuestion),
   },
-  handler: async (ctx: MutationCtx, args) => {
-    const now = Date.now();
-    const existingJob = await ctx.db
-      .query("jobImports")
-      .withIndex("by_user_source_external", (q) =>
-        q
-          .eq("userId", args.userId)
-          .eq("source", args.source)
-          .eq("externalId", args.externalId),
-      )
-      .first();
-
-    const patch = {
-      source: args.source,
-      url: args.url,
-      externalId: args.externalId,
-      boardToken: args.boardToken,
-      leverSite: args.leverSite,
-      title: args.title,
-      company: args.company,
-      location: args.location,
-      description: args.description,
-      applyUrl: args.applyUrl,
-      questions: args.questions,
-      updatedAt: now,
-    };
-
-    const jobImportId =
-      existingJob === null
-        ? await ctx.db.insert("jobImports", {
-            userId: args.userId,
-            createdAt: now,
-            ...patch,
-          })
-        : (await ctx.db.patch(existingJob._id, patch), existingJob._id);
-
-    const existingApplication = await ctx.db
-      .query("applications")
-      .withIndex("by_jobImportId", (q) => q.eq("jobImportId", jobImportId))
-      .filter((q) => q.eq(q.field("userId"), args.userId))
-      .first();
-
-    const applicationId =
-      existingApplication === null
-        ? await ctx.db.insert("applications", {
-            userId: args.userId,
-            jobImportId,
-            status: "draft",
-            createdAt: now,
-            updatedAt: now,
-          })
-        : existingApplication._id;
-
-    return { jobImportId, applicationId };
-  },
+  handler: async (ctx: MutationCtx, args) => await saveImportedJobRow(ctx, args),
 });
 
 export const getForUser = internalQuery({

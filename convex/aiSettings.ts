@@ -8,7 +8,7 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { HOUSE_MODEL, HOUSE_PROVIDER, findModel } from "./ai/providers";
+import { HOUSE_MODEL, HOUSE_PROVIDER, defaultModelFor, findModel } from "./ai/providers";
 import { aiProvider } from "./validators";
 
 export const SUBMIT_CAP_MIN = 1;
@@ -33,6 +33,12 @@ async function requireUserId(ctx: QueryCtx | MutationCtx) {
 
 function periodKeyFor(timestamp: number) {
   return new Date(timestamp).toISOString().slice(0, 7);
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function startOfUtcDay(timestamp: number) {
+  return Math.floor(timestamp / DAY_MS) * DAY_MS;
 }
 
 function clampSubmitCap(value: number) {
@@ -134,6 +140,78 @@ export const usageThisMonth = query({
       }),
       { periodKey, calls: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 },
     );
+  },
+});
+
+/**
+ * Which provider and model a generation call would use right now, with no key
+ * material of any kind. Drives the cost estimates shown before a run.
+ */
+export const resolvedModel = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireUserId(ctx);
+    const settings = await ctx.db
+      .query("aiSettings")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .first();
+
+    if (settings) {
+      const key = await ctx.db
+        .query("apiKeys")
+        .withIndex("by_user_provider", (q) =>
+          q.eq("userId", userId).eq("provider", settings.provider),
+        )
+        .first();
+
+      if (key) {
+        const model =
+          findModel(settings.provider, settings.model) ?? defaultModelFor(settings.provider);
+        return { provider: settings.provider, model: model.id, usingHouseKey: false };
+      }
+    }
+
+    return { provider: HOUSE_PROVIDER, model: HOUSE_MODEL, usingHouseKey: true };
+  },
+});
+
+/** The daily scoring budget in force for a user, defaults included. */
+export const scoringBudget = internalQuery({
+  args: { userId: v.id("users") },
+  handler: async (ctx: QueryCtx, args) => {
+    const settings = await ctx.db
+      .query("aiSettings")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .first();
+
+    return {
+      budgetUsd: settings?.dailyScoringBudgetUsd ?? DEFAULT_AI_SETTINGS.dailyScoringBudgetUsd,
+    };
+  },
+});
+
+/** Spend so far today for one purpose, used to enforce the scoring budget. */
+export const usageToday = internalQuery({
+  args: { userId: v.id("users"), purpose: v.string() },
+  handler: async (ctx: QueryCtx, args) => {
+    const now = Date.now();
+    const dayStart = startOfUtcDay(now);
+    const events = await ctx.db
+      .query("aiUsage")
+      .withIndex("by_user_period", (q) =>
+        q.eq("userId", args.userId).eq("periodKey", periodKeyFor(now)),
+      )
+      .collect();
+
+    return events
+      .filter((event) => event.purpose === args.purpose && event.createdAt >= dayStart)
+      .reduce(
+        (totals, event) => ({
+          calls: totals.calls + 1,
+          costUsd: Math.round((totals.costUsd + event.costUsd) * 1_000_000) / 1_000_000,
+        }),
+        { calls: 0, costUsd: 0 },
+      );
   },
 });
 

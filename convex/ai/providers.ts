@@ -292,6 +292,14 @@ export const HOUSE_MODEL = "openai/gpt-oss-120b";
 export const APPLICATION_INPUT_TOKENS = 12_000;
 export const APPLICATION_OUTPUT_TOKENS = 3_500;
 
+/** One resume parse: the pasted resume in, the fact registry out. */
+export const PARSE_PROFILE_INPUT_TOKENS = 2_500;
+export const PARSE_PROFILE_OUTPUT_TOKENS = 1_500;
+
+/** One fit score: profile summary plus a trimmed posting in, a verdict out. */
+export const SCORE_INPUT_TOKENS = 1_600;
+export const SCORE_OUTPUT_TOKENS = 300;
+
 export function isProviderId(value: string): value is ProviderId {
   return Object.prototype.hasOwnProperty.call(PROVIDERS, value);
 }
@@ -324,6 +332,15 @@ export function estimateCostUsd(
 
 export function estimateCostPerApplication(model: ModelInfo): number {
   return estimateCostUsd(model, APPLICATION_INPUT_TOKENS, APPLICATION_OUTPUT_TOKENS);
+}
+
+export function estimateParseProfileCost(model: ModelInfo): number {
+  return estimateCostUsd(model, PARSE_PROFILE_INPUT_TOKENS, PARSE_PROFILE_OUTPUT_TOKENS);
+}
+
+export function estimateScoringCost(model: ModelInfo, jobs: number): number {
+  const count = Math.max(0, Math.round(jobs));
+  return estimateCostUsd(model, SCORE_INPUT_TOKENS * count, SCORE_OUTPUT_TOKENS * count);
 }
 
 /** Cost per application for a (provider, model) pair, or null when unknown. */

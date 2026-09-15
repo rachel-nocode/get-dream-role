@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { Sparkles } from "lucide-react";
@@ -57,10 +58,17 @@ export default function JobImportClient() {
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-forge-accent">
             New application
           </p>
-          <h1 className="mt-3 font-display text-4xl font-bold">Import a Greenhouse or Lever job</h1>
+          <h1 className="mt-3 font-display text-4xl font-bold">Import a job by URL</h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-forge-muted">
-            Paste the job URL, add your resume source, and GetDreamRole will create a reviewable packet.
+            Supports Greenhouse, Lever, and Ashby job URLs. Paste one, add your resume source, and
+            GetDreamRole will create a reviewable packet.
           </p>
+          <Link
+            href="/jobs"
+            className="mt-4 inline-flex text-sm text-forge-accent hover:text-forge-accent-hover"
+          >
+            Or browse jobs discovery found for you
+          </Link>
         </section>
 
         <form onSubmit={submit} className="rounded-lg border border-forge-border bg-forge-surface p-5">
