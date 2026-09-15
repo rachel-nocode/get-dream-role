@@ -12,6 +12,8 @@ import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
 import { PROVIDERS, estimateCostPerApplication, findModel } from "./ai/providers";
 import { NEEDS_ANSWER, computeAtsScore } from "./ai/tailor";
 import { resolveModelForUser } from "./aiSettings";
+import { logActivity } from "./applications";
+import { hasApplied } from "./lib/status";
 import type { UserConfirmedFact } from "./validators";
 
 const claimResolution = v.union(v.literal("confirmed"), v.literal("rejected"));
@@ -34,6 +36,19 @@ async function ownedDraft(
     throw new Error("Could not find that draft.");
   }
   return draft;
+}
+
+/** The pipeline row a draft belongs to, so review steps can be logged. */
+async function applicationForDraft(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  draft: Doc<"applicationDrafts">,
+): Promise<Doc<"applications"> | null> {
+  return await ctx.db
+    .query("applications")
+    .withIndex("by_jobImportId", (q) => q.eq("jobImportId", draft.jobImportId))
+    .filter((q) => q.eq(q.field("userId"), userId))
+    .first();
 }
 
 /** What the full pipeline would cost on the model this user is set up with. */
@@ -100,6 +115,19 @@ export const resolveClaim = mutation({
       updatedAt: now,
     });
 
+    const application = await applicationForDraft(ctx, userId, draft);
+    if (application) {
+      await logActivity(ctx, {
+        userId,
+        applicationId: application._id,
+        type: "reviewed",
+        message:
+          args.status === "confirmed"
+            ? `Confirmed the flagged claim "${claim.text}".`
+            : `Rejected the flagged claim "${claim.text}".`,
+      });
+    }
+
     if (args.status === "confirmed") {
       const profile = await ctx.db
         .query("careerProfiles")
@@ -157,9 +185,26 @@ export const approve = mutation({
     }
 
     const now = Date.now();
-    // TODO(Phase 4): move the application to "approved" and write the
-    // activity log entry once the extended status set lands.
     await ctx.db.patch(draft._id, { approvedAt: now, updatedAt: now });
+
+    const application = await applicationForDraft(ctx, userId, draft);
+    if (application) {
+      // Re-approving a regenerated kit must not undo a submit.
+      if (!hasApplied(application.status)) {
+        await ctx.db.patch(application._id, {
+          status: "approved",
+          lastStatusChangeAt: now,
+          updatedAt: now,
+        });
+      }
+      await logActivity(ctx, {
+        userId,
+        applicationId: application._id,
+        type: "approved",
+        message: "Approved the apply kit. Nothing is sent until you send it.",
+      });
+    }
+
     return now;
   },
 });

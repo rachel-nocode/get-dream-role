@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 import {
+  activityType,
   aiProvider,
   answerBankEntry,
   answerDraft,
@@ -186,12 +187,33 @@ export default defineSchema({
     status: applicationStatus,
     openedAt: v.optional(v.number()),
     submittedAt: v.optional(v.number()),
+    // Everything below arrived with the tracker, so it is optional and rows
+    // written earlier keep validating.
+    /** When the next follow-up or thank-you is due. */
+    nextActionAt: v.optional(v.number()),
+    nextActionLabel: v.optional(v.string()),
+    followupCount: v.optional(v.number()),
+    /** The employer, normalized, so the per-company caps can count. */
+    companyKey: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    lastStatusChangeAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index("by_userId", ["userId"])
     .index("by_jobImportId", ["jobImportId"])
     .index("by_user_status", ["userId", "status"]),
+  activityLog: defineTable({
+    userId: v.id("users"),
+    applicationId: v.id("applications"),
+    type: activityType,
+    message: v.string(),
+    /** Whatever the entry carries, such as a drafted follow-up email. */
+    payload: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_applicationId", ["applicationId"])
+    .index("by_userId", ["userId"]),
   apiKeys: defineTable({
     userId: v.id("users"),
     provider: aiProvider,

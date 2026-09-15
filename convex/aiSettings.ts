@@ -16,6 +16,7 @@ import {
   findModel,
   type ProviderId,
 } from "./ai/providers";
+import { DEFAULT_DAILY_SUBMIT_CAP } from "./lib/caps";
 import { aiProvider } from "./validators";
 
 export const SUBMIT_CAP_MIN = 1;
@@ -26,7 +27,7 @@ export const SCORING_BUDGET_MAX_USD = 25;
 export const DEFAULT_AI_SETTINGS = {
   provider: HOUSE_PROVIDER,
   model: HOUSE_MODEL,
-  dailySubmitCap: 10,
+  dailySubmitCap: DEFAULT_DAILY_SUBMIT_CAP,
   dailyScoringBudgetUsd: 0.5,
 };
 

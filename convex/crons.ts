@@ -10,4 +10,12 @@ crons.daily(
   internal.discovery.actions.scanAndScoreAll,
 );
 
+// An hour after the scan, so the board a user opens in the morning already
+// shows which applications nobody is going to answer.
+crons.daily(
+  "mark silent applications as ghosted",
+  { hourUTC: 7, minuteUTC: 0 },
+  internal.applications.markGhosted,
+);
+
 export default crons;

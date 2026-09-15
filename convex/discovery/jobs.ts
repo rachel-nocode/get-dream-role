@@ -30,6 +30,7 @@ export const SCORING_DESCRIPTION_CHARS = 4_000;
 
 const LIST_CAP = 200;
 const SCORING_CANDIDATE_CAP = 200;
+const TOP_LIMIT = 5;
 
 /** Statuses that say the user already decided: a rescan must not undo them. */
 const USER_OWNED_STATUSES: DiscoveredJobStatus[] = ["saved", "dismissed", "imported"];
@@ -128,6 +129,30 @@ export const stats = query({
     }
 
     return { ...counts, total: jobs.length };
+  },
+});
+
+/** The best scored postings the user has not triaged yet, for the dashboard. */
+export const top = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const jobs = await ctx.db
+      .query("discoveredJobs")
+      .withIndex("by_user_status", (q) => q.eq("userId", userId).eq("status", "scored"))
+      .take(LIST_CAP);
+
+    return jobs
+      .sort(byScoreDescending)
+      .slice(0, Math.max(1, Math.round(args.limit ?? TOP_LIMIT)))
+      .map((job) => ({
+        id: job._id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        remote: job.remote,
+        fitScore: job.fitScore ?? job.prefilterScore,
+      }));
   },
 });
 

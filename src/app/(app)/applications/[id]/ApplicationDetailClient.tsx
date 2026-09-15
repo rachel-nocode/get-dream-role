@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAction, useMutation, useQuery } from "convex/react";
 import { Download, ExternalLink } from "lucide-react";
+import ActivityTimeline, {
+  latestFollowupFrom,
+} from "@/components/applications/ActivityTimeline";
 import AnswersPanel from "@/components/applications/AnswersPanel";
 import CopyButton from "@/components/applications/CopyButton";
 import GenerateBar from "@/components/applications/GenerateBar";
@@ -11,11 +14,12 @@ import ResumeDiff from "@/components/applications/ResumeDiff";
 import ReviewPanel, { type ClaimResolution } from "@/components/applications/ReviewPanel";
 import SubmitPanel from "@/components/applications/SubmitPanel";
 import AppShell from "@/components/app/AppShell";
-import { ApplicationStatus, StatusPill } from "@/components/app/StatusPill";
+import { StatusPill, type ManualStatus } from "@/components/app/StatusPill";
 import { api } from "@convex/_generated/api";
 import type { Doc, Id } from "@convex/_generated/dataModel";
 import { PROVIDERS, findModel, formatUsd } from "@convex/ai/providers";
 import { NEEDS_ANSWER, buildFactRegistry, factTextById } from "@convex/ai/tailor";
+import { downloadTextFile, fileNameFor } from "@/lib/resumeExport";
 
 const TAB_LABELS = {
   review: "Review",
@@ -23,7 +27,7 @@ const TAB_LABELS = {
   resume: "Resume",
   cover: "Cover letter",
   questions: "Answers",
-  submit: "Submit",
+  submit: "Apply kit",
 } as const;
 
 type Tab = keyof typeof TAB_LABELS;
@@ -76,14 +80,22 @@ export default function ApplicationDetailClient({ applicationId }: { application
     api.drafts.estimate,
     data?.job ? { jobImportId: data.job._id } : "skip",
   );
+  const activity = useQuery(api.applications.activity, {
+    applicationId: applicationId as Id<"applications">,
+  });
+  const budget = useQuery(api.applications.submitBudget);
 
   const generateApplyKit = useAction(api.ai.draftActions.generateApplyKit);
   const regenerateAnswer = useAction(api.ai.draftActions.regenerateAnswer);
+  const draftFollowup = useAction(api.ai.followupActions.draftFollowup);
   const resolveClaim = useMutation(api.drafts.resolveClaim);
   const approve = useMutation(api.drafts.approve);
   const updateAnswer = useMutation(api.careerProfile.updateAnswer);
   const markOpened = useMutation(api.applications.markOpened);
+  const markSubmitted = useMutation(api.applications.markSubmitted);
   const updateStatus = useMutation(api.applications.updateStatus);
+  const addNote = useMutation(api.applications.addNote);
+  const snoozeFollowup = useMutation(api.applications.snoozeFollowup);
 
   async function guard(task: () => Promise<unknown>) {
     setError("");
@@ -135,17 +147,13 @@ export default function ApplicationDetailClient({ applicationId }: { application
       ...draft.answerDrafts.map((answer) => `${answer.question}\n${answer.answer}`),
     ].join("\n\n");
 
-    const href = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = "getdreamrole-application-pack.txt";
-    link.click();
-    URL.revokeObjectURL(href);
+    downloadTextFile(fileNameFor(job.company, "application-pack", "txt"), content, "text/plain");
   }
 
   async function openApplyUrl() {
-    await markOpened({ applicationId: applicationId as Id<"applications"> });
+    // Open first: a popup blocker will stop a window opened after an await.
     window.open(job.applyUrl, "_blank", "noopener,noreferrer");
+    await markOpened({ applicationId: applicationId as Id<"applications"> });
   }
 
   return (
@@ -297,6 +305,10 @@ export default function ApplicationDetailClient({ applicationId }: { application
                   <pre className="mt-3 max-h-[520px] overflow-auto whitespace-pre-wrap rounded-lg border border-forge-border bg-forge-bg p-4 text-sm leading-6 text-forge-muted">
                     {job.description}
                   </pre>
+                  <h2 className="mt-6 font-display text-xl font-semibold">Activity</h2>
+                  <div className="mt-3">
+                    <ActivityTimeline entries={activity ?? []} />
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -336,10 +348,30 @@ export default function ApplicationDetailClient({ applicationId }: { application
             {activeTab === "submit" ? (
               <SubmitPanel
                 status={application.status}
-                resumeText={draft?.optimizedResume}
-                coverLetter={draft?.coverLetter}
+                company={job.company}
+                draft={draft}
+                tracking={{
+                  nextActionAt: application.nextActionAt ?? null,
+                  nextActionLabel: application.nextActionLabel ?? null,
+                  followupCount: application.followupCount ?? 0,
+                  notes: application.notes ?? "",
+                }}
+                budget={budget ?? null}
+                latestFollowup={latestFollowupFrom(activity)}
                 onOpenApply={() => guard(openApplyUrl)}
-                onStatusChange={(status: ApplicationStatus) =>
+                onMarkSubmitted={async () => {
+                  await markSubmitted({ applicationId: application._id });
+                }}
+                onDraftFollowup={async () => {
+                  await draftFollowup({ applicationId: application._id });
+                }}
+                onSnooze={async (days: number) => {
+                  await snoozeFollowup({ applicationId: application._id, days });
+                }}
+                onAddNote={async (text: string) => {
+                  await addNote({ applicationId: application._id, text });
+                }}
+                onStatusChange={(status: ManualStatus) =>
                   guard(() => updateStatus({ applicationId: application._id, status }))
                 }
               />

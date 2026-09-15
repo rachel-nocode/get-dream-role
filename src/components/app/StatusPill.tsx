@@ -1,40 +1,50 @@
 import clsx from "clsx";
+import {
+  MANUAL_STATUSES,
+  STATUS_LABELS,
+  normalizeStatus,
+  type ManualStatus,
+  type PipelineStatus,
+  type StoredStatus,
+} from "@convex/lib/status";
 
-const statusLabels = {
-  draft: "Draft",
-  ready: "Ready",
-  opened: "Opened",
-  submitted: "Submitted",
-  interview: "Interview",
-  rejected: "Rejected",
-  archived: "Archived",
-} as const;
+export type { ManualStatus, PipelineStatus };
+export type ApplicationStatus = StoredStatus;
 
-const statusClassNames = {
-  draft: "border-forge-border bg-forge-elevated text-forge-muted",
-  ready: "border-forge-accent/40 bg-forge-accent-dim text-forge-accent",
-  opened: "border-blue-400/30 bg-blue-400/10 text-blue-200",
+const statusClassNames: Record<PipelineStatus, string> = {
+  discovered: "border-forge-border bg-forge-elevated text-forge-muted",
+  scored: "border-forge-border-bright bg-forge-elevated text-forge-text",
+  drafted: "border-forge-border bg-forge-elevated text-forge-muted",
+  needs_review: "border-forge-warning/40 bg-forge-warning/10 text-forge-warning",
+  approved: "border-forge-accent/40 bg-forge-accent-dim text-forge-accent",
   submitted: "border-forge-success/30 bg-forge-success/10 text-forge-success",
-  interview: "border-purple-300/30 bg-purple-300/10 text-purple-200",
+  interview: "border-purple-500/40 bg-purple-500/10 text-purple-500",
+  offer: "border-forge-success/50 bg-forge-success/20 text-forge-success",
   rejected: "border-forge-danger/30 bg-forge-danger/10 text-forge-danger",
+  ghosted: "border-forge-border bg-forge-surface text-forge-muted",
   archived: "border-forge-border bg-forge-surface text-forge-muted",
-} as const;
-
-export type ApplicationStatus = keyof typeof statusLabels;
+};
 
 export function StatusPill({ status }: { status: ApplicationStatus }) {
+  const stage = normalizeStatus(status);
+
   return (
     <span
       className={clsx(
         "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
-        statusClassNames[status],
+        statusClassNames[stage],
       )}
     >
-      {statusLabels[status]}
+      {STATUS_LABELS[stage]}
     </span>
   );
 }
 
-export const applicationStatusOptions = Object.entries(statusLabels).map(
-  ([value, label]) => ({ value: value as ApplicationStatus, label }),
-);
+/**
+ * The moves a user can make by hand. "Submitted" is missing on purpose: it
+ * goes through the apply kit so the daily and per-company caps are checked.
+ */
+export const applicationStatusOptions = MANUAL_STATUSES.map((value) => ({
+  value,
+  label: STATUS_LABELS[value],
+}));

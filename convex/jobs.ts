@@ -11,7 +11,9 @@ import {
   query,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { logActivity } from "./applications";
 import { fetchAshbyBoard, normalizeAshbyJob } from "./discovery/fetchers";
+import { companyKeyFor } from "./lib/caps";
 import { humanizeSlug, stripHtml } from "./lib/html";
 import { parseJobUrl } from "./lib/jobUrls";
 import { jobQuestion, jobSource, type JobQuestion, type JobSource } from "./validators";
@@ -258,16 +260,26 @@ export async function saveImportedJobRow(
     .filter((q) => q.eq(q.field("userId"), args.userId))
     .first();
 
-  const applicationId =
-    existingApplication === null
-      ? await ctx.db.insert("applications", {
-          userId: args.userId,
-          jobImportId,
-          status: "draft",
-          createdAt: now,
-          updatedAt: now,
-        })
-      : existingApplication._id;
+  if (existingApplication !== null) {
+    return { jobImportId, applicationId: existingApplication._id };
+  }
+
+  const applicationId = await ctx.db.insert("applications", {
+    userId: args.userId,
+    jobImportId,
+    status: "drafted",
+    companyKey: companyKeyFor(args.company),
+    lastStatusChangeAt: now,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  await logActivity(ctx, {
+    userId: args.userId,
+    applicationId,
+    type: "created",
+    message: `Imported ${args.title} at ${args.company} from ${args.source}.`,
+  });
 
   return { jobImportId, applicationId };
 }

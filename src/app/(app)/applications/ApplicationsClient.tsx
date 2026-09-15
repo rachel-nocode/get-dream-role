@@ -1,14 +1,29 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { useQuery } from "convex/react";
-import { FilePlus2 } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { FilePlus2, Search } from "lucide-react";
+import Board from "@/components/applications/Board";
+import type { TrackerRow } from "@/components/applications/BoardCard";
 import AppShell from "@/components/app/AppShell";
-import { StatusPill } from "@/components/app/StatusPill";
 import { api } from "@convex/_generated/api";
+import type { ManualStatus } from "@convex/lib/status";
 
 export default function ApplicationsClient() {
+  const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
   const applications = useQuery(api.applications.list);
+  const updateStatus = useMutation(api.applications.updateStatus);
+
+  async function move(row: TrackerRow, status: ManualStatus) {
+    setError("");
+    try {
+      await updateStatus({ applicationId: row.application._id, status });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not move that application.");
+    }
+  }
 
   return (
     <AppShell>
@@ -29,38 +44,35 @@ export default function ApplicationsClient() {
           </Link>
         </div>
 
-        <section className="rounded-lg border border-forge-border bg-forge-surface">
-          <div className="divide-y divide-forge-border">
-            {applications === undefined ? (
-              <p className="p-5 text-sm text-forge-muted">Loading applications...</p>
-            ) : applications.length > 0 ? (
-              applications.map(({ application, job, draft }) => (
-                <Link
-                  key={application._id}
-                  href={`/applications/${application._id}`}
-                  className="grid gap-3 p-5 transition-colors hover:bg-forge-elevated md:grid-cols-[1fr_auto] md:items-center"
-                >
-                  <div>
-                    <p className="font-semibold">{job?.title ?? "Untitled role"}</p>
-                    <p className="mt-1 text-sm text-forge-muted">
-                      {job?.company ?? "Unknown company"} · {job?.location || "Remote/unspecified"}
-                    </p>
-                    {draft ? (
-                      <p className="mt-2 text-xs text-forge-muted">
-                        Match {draft.matchScore}% · ATS {draft.atsScore}%
-                      </p>
-                    ) : null}
-                  </div>
-                  <StatusPill status={application.status} />
-                </Link>
-              ))
-            ) : (
-              <div className="p-5">
-                <p className="text-sm text-forge-muted">No applications yet.</p>
-              </div>
-            )}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-forge-muted" />
+          <input
+            type="search"
+            defaultValue=""
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Filter by company or title"
+            aria-label="Filter by company or title"
+            className="h-11 w-full rounded-lg border border-forge-border bg-forge-surface pl-9 pr-3 text-sm text-forge-text outline-none focus:border-forge-accent md:max-w-sm"
+          />
+        </div>
+
+        {error ? (
+          <p className="rounded-lg border border-forge-danger/30 bg-forge-danger/10 px-4 py-3 text-sm text-forge-danger">
+            {error}
+          </p>
+        ) : null}
+
+        {applications === undefined ? (
+          <p className="text-sm text-forge-muted">Loading applications...</p>
+        ) : applications.length === 0 ? (
+          <div className="rounded-lg border border-forge-border bg-forge-surface p-5">
+            <p className="text-sm text-forge-muted">
+              No applications yet. Import a job, or score a few from the discovery queue.
+            </p>
           </div>
-        </section>
+        ) : (
+          <Board rows={applications} search={search} onStatusChange={move} />
+        )}
       </div>
     </AppShell>
   );

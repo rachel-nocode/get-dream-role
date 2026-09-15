@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Target, FileSearch, Upload, Sparkles } from "lucide-react";
+import {
+  Target,
+  FileSearch,
+  Upload,
+  Sparkles,
+  ShieldCheck,
+  Hand,
+  type LucideIcon,
+} from "lucide-react";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -12,6 +20,74 @@ const atsGrid = [
   "Greenhouse", "Lever", "Workday",
   "iCIMS", "Taleo", "BrassRing",
 ];
+
+type Feature = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+const pipelineFeatures: Feature[] = [
+  {
+    icon: FileSearch,
+    title: "Job Description Matching",
+    description:
+      "Extracts required skills, qualifications, and keywords from the job posting, then maps each one to a fact already in your profile, or shows it as a gap.",
+  },
+  {
+    icon: Upload,
+    title: "Resume Parsing & Scoring",
+    description:
+      "Upload your PDF and get an instant ATS compatibility score with a detailed breakdown of what is working and what needs improvement.",
+  },
+  {
+    icon: Sparkles,
+    title: "AI-Powered Rewrites",
+    description:
+      "Your own bullets, rewritten in the posting's language, on the model you choose and the key you bring.",
+  },
+];
+
+const trustFeatures: Feature[] = [
+  {
+    icon: ShieldCheck,
+    title: "Never fabricates",
+    description:
+      "A deterministic verifier runs after every draft. Every rewritten bullet has to cite a fact from your profile, and any tool, number or credential the text adds comes back as a flagged claim you confirm or reject. The draft cannot be approved until you have.",
+  },
+  {
+    icon: Hand,
+    title: "You stay in control",
+    description:
+      "No bots, no logins we hold, no form submitted from our servers. You open the employer's own page and click submit. Daily and per-company caps keep the volume human, because volume is exactly what gets candidates flagged.",
+  },
+];
+
+function FeatureCard({ feature }: { feature: Feature }) {
+  const Icon = feature.icon;
+
+  return (
+    <motion.div
+      variants={fadeIn}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-80px" }}
+      className="bg-forge-surface border border-forge-border rounded-xl p-6 flex gap-5"
+    >
+      <div className="w-10 h-10 shrink-0 rounded-lg bg-forge-accent-dim flex items-center justify-center">
+        <Icon className="w-5 h-5 text-forge-accent" />
+      </div>
+      <div>
+        <h3 className="font-display text-lg font-semibold text-forge-text">
+          {feature.title}
+        </h3>
+        <p className="text-forge-muted mt-1 text-sm leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Features() {
   return (
@@ -27,8 +103,8 @@ export default function Features() {
             What GetDreamRole Does
           </h2>
           <p className="text-forge-muted mt-3 max-w-lg">
-            A complete pipeline from resume upload to optimized output,
-            calibrated to the hiring platform that will read it first.
+            A complete loop from the boards you watch to the offer, calibrated to
+            the hiring platform that will read your application first.
           </p>
         </motion.div>
 
@@ -67,74 +143,18 @@ export default function Features() {
             </div>
           </motion.div>
 
-          {/* Right — three stacked cards */}
+          {/* Right — stacked cards */}
           <div className="flex flex-col gap-6">
-            <motion.div
-              variants={fadeIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-              className="bg-forge-surface border border-forge-border rounded-xl p-6 flex gap-5"
-            >
-              <div className="w-10 h-10 shrink-0 rounded-lg bg-forge-accent-dim flex items-center justify-center">
-                <FileSearch className="w-5 h-5 text-forge-accent" />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-semibold text-forge-text">
-                  Job Description Matching
-                </h3>
-                <p className="text-forge-muted mt-1 text-sm leading-relaxed">
-                  Extracts required skills, qualifications, and keywords from
-                  the job posting, then aligns your resume language to match
-                  what the system is scanning for.
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-              className="bg-forge-surface border border-forge-border rounded-xl p-6 flex gap-5"
-            >
-              <div className="w-10 h-10 shrink-0 rounded-lg bg-forge-accent-dim flex items-center justify-center">
-                <Upload className="w-5 h-5 text-forge-accent" />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-semibold text-forge-text">
-                  Resume Parsing &amp; Scoring
-                </h3>
-                <p className="text-forge-muted mt-1 text-sm leading-relaxed">
-                  Upload your PDF and get an instant ATS compatibility score
-                  with a detailed breakdown of what is working and what needs
-                  improvement.
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-              className="bg-forge-surface border border-forge-border rounded-xl p-6 flex gap-5"
-            >
-              <div className="w-10 h-10 shrink-0 rounded-lg bg-forge-accent-dim flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-forge-accent" />
-              </div>
-              <div>
-                <h3 className="font-display text-lg font-semibold text-forge-text">
-                  AI-Powered Rewrites
-                </h3>
-                <p className="text-forge-muted mt-1 text-sm leading-relaxed">
-                  Groq-powered language model rewrites your bullet points for
-                  impact, specificity, and keyword density without fabricating
-                  experience.
-                </p>
-              </div>
-            </motion.div>
+            {pipelineFeatures.map((feature) => (
+              <FeatureCard key={feature.title} feature={feature} />
+            ))}
           </div>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          {trustFeatures.map((feature) => (
+            <FeatureCard key={feature.title} feature={feature} />
+          ))}
         </div>
       </div>
     </section>

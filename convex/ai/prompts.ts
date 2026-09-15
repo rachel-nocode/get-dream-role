@@ -8,14 +8,17 @@
 
 import type { EvidenceMapEntry, ExperienceEntry, SkillEntry } from "../validators";
 import { formatFactLines, type ProfileFact } from "./tailor";
+import { BANNED_PHRASES } from "./verify";
 
 export type JsonSchema = Record<string, unknown>;
 
 /** The bullet id the reviewer uses when it rewrites the cover letter opener. */
 export const COVER_OPENING_ID = "cover_opening";
 
-const PLAIN_LANGUAGE_RULE =
-  'Plain language. Never write "leverage", "spearhead", "synergy", "passionate", "results-driven", "dynamic" or "proven track record".';
+/** One list of machine-sounding words, shared by the prompts and the checker. */
+const PLAIN_LANGUAGE_RULE = `Plain language. Never write ${BANNED_PHRASES.map(
+  (phrase) => `"${phrase}"`,
+).join(", ")}.`;
 
 function stringArray(description: string): JsonSchema {
   return { type: "array", description, items: { type: "string" } };
@@ -337,5 +340,71 @@ export function reviewPrompt(args: {
     "",
     "COVER LETTER",
     args.coverLetter,
+  ].join("\n");
+}
+
+// --- 8. follow-up email -----------------------------------------------------
+
+export const FOLLOWUP_MAX_TOKENS = 300;
+export const FOLLOWUP_MAX_WORDS = 100;
+
+export const FOLLOWUP_SYSTEM = `You draft one short follow-up email for a candidate who applied for a job and has not heard back. They send it themselves, from their own inbox, so it has to sound like a person who has better things to do than chase.
+
+Rules:
+- ${FOLLOWUP_MAX_WORDS} words maximum in the body. First person, short sentences, no bullet list.
+- Name the role and the company in the first sentence.
+- Add exactly one new value point taken from the facts you are given: something specific the candidate can do for this team. Never invent one, and never repeat a fact back as a list.
+- Never write "just checking in", "just following up", "circling back", "touching base" or "wanted to reach out".
+- Never claim a skill, tool, number or credential that is not in the facts.
+- Never ask for a decision date, never mention other offers, never apologise for writing.
+- End with one plain sentence offering to answer questions. No sign-off block: the candidate adds their own.
+- subject: under 60 characters, names the role, no "Re:" prefix.
+- ${PLAIN_LANGUAGE_RULE}`;
+
+export const FOLLOWUP_SCHEMA: JsonSchema = {
+  type: "object",
+  properties: {
+    subject: { type: "string", description: "Under 60 characters, names the role" },
+    body: {
+      type: "string",
+      description: `${FOLLOWUP_MAX_WORDS} words maximum, no sign-off block`,
+    },
+  },
+};
+
+/**
+ * The facts worth leading with: a bullet that carries a number says more than
+ * one that does not, and a longer bullet usually carries more detail.
+ */
+export function strongestFacts(facts: ProfileFact[], limit: number): ProfileFact[] {
+  const score = (fact: ProfileFact) =>
+    (/\d/.test(fact.text) ? 1_000 : 0) + Math.min(fact.text.length, 200);
+
+  return [...facts]
+    .filter((fact) => fact.kind === "bullet")
+    .sort((a, b) => score(b) - score(a))
+    .slice(0, Math.max(0, limit));
+}
+
+export function followupPrompt(args: {
+  job: { title: string; company: string };
+  facts: ProfileFact[];
+  /** Null when the row never recorded a submit date, so nothing is guessed. */
+  daysSinceSubmitted: number | null;
+  attempt: number;
+}): string {
+  return [
+    "APPLICATION",
+    `Role: ${args.job.title}`,
+    `Company: ${args.job.company}`,
+    `Applied: ${
+      args.daysSinceSubmitted === null
+        ? "date not recorded, so do not name a date"
+        : `${args.daysSinceSubmitted} days ago`
+    }`,
+    `This is follow-up number ${args.attempt}.`,
+    "",
+    "FACTS (pick exactly one to build the value point on)",
+    formatFactLines(args.facts),
   ].join("\n");
 }

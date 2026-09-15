@@ -1,15 +1,69 @@
 import { v, type Infer } from "convex/values";
 import type { ProviderId } from "./ai/providers";
+import type { ManualStatus, StoredStatus } from "./lib/status";
 
+/**
+ * The pipeline stages, plus the three literals rows written before Phase 4
+ * still carry. Nothing new is written with an old literal: every read maps
+ * them through `normalizeStatus` in `lib/status.ts`.
+ */
 export const applicationStatus = v.union(
+  v.literal("discovered"),
+  v.literal("scored"),
+  v.literal("drafted"),
+  v.literal("needs_review"),
+  v.literal("approved"),
+  v.literal("submitted"),
+  v.literal("interview"),
+  v.literal("offer"),
+  v.literal("rejected"),
+  v.literal("ghosted"),
+  v.literal("archived"),
+  // Retired, kept so existing rows keep validating.
   v.literal("draft"),
   v.literal("ready"),
   v.literal("opened"),
-  v.literal("submitted"),
+);
+
+/** Fails to compile if the stored statuses drift from the pipeline list. */
+export const applicationStatusMatchesPipeline: SameUnion<
+  Infer<typeof applicationStatus>,
+  StoredStatus
+> = true;
+
+/** The stages the status control on a card can move an application to. */
+export const manualApplicationStatus = v.union(
+  v.literal("drafted"),
+  v.literal("needs_review"),
+  v.literal("approved"),
   v.literal("interview"),
+  v.literal("offer"),
   v.literal("rejected"),
+  v.literal("ghosted"),
   v.literal("archived"),
 );
+
+/** Fails to compile if the manual moves drift from the list the UI shows. */
+export const manualApplicationStatusMatchesList: SameUnion<
+  Infer<typeof manualApplicationStatus>,
+  ManualStatus
+> = true;
+
+/** What happened to an application, in the order it happened. */
+export const activityType = v.union(
+  v.literal("created"),
+  v.literal("drafted"),
+  v.literal("reviewed"),
+  v.literal("approved"),
+  v.literal("opened_form"),
+  v.literal("submitted"),
+  v.literal("status_change"),
+  v.literal("followup_drafted"),
+  v.literal("note"),
+  v.literal("ghosted"),
+);
+
+export type ActivityType = Infer<typeof activityType>;
 
 export const entitlementKind = v.union(
   v.literal("optimizer_lifetime"),

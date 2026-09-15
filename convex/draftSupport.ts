@@ -2,6 +2,9 @@ import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { MutationCtx, QueryCtx, internalMutation, internalQuery } from "./_generated/server";
 import { NEEDS_ANSWER } from "./ai/tailor";
+import { logActivity } from "./applications";
+import { companyKeyFor } from "./lib/caps";
+import { hasApplied } from "./lib/status";
 import {
   aiProvider,
   answerConfidence,
@@ -107,25 +110,39 @@ export const saveGeneratedDraft = internalMutation({
     });
 
     const application = await applicationForJob(ctx, userId, jobImportId);
+    const job = await ctx.db.get(jobImportId);
 
-    // TODO(Phase 4): move to "needs_review", and to "approved" once the user
-    // clears the flagged claims, when the extended status set lands.
+    // A fresh kit always goes back to the user: they confirm the flagged
+    // claims and approve it, which is what moves it on to "approved".
     const applicationId =
       application === null
         ? await ctx.db.insert("applications", {
             userId,
             jobImportId,
             draftId,
-            status: "ready",
+            status: "needs_review",
+            companyKey: job ? companyKeyFor(job.company) : undefined,
+            lastStatusChangeAt: now,
             createdAt: now,
             updatedAt: now,
           })
         : (await ctx.db.patch(application._id, {
             draftId,
-            status: "ready",
+            // Regenerating a kit for something already sent must not pull it
+            // back out of the tracker.
+            ...(hasApplied(application.status)
+              ? {}
+              : { status: "needs_review" as const, lastStatusChangeAt: now }),
             updatedAt: now,
           }),
           application._id);
+
+    await logActivity(ctx, {
+      userId,
+      applicationId,
+      type: "drafted",
+      message: "Built an apply kit: resume, cover letter and screening answers.",
+    });
 
     const periodKey = new Date(now).toISOString().slice(0, 7);
     await ctx.db.insert("usageEvents", {

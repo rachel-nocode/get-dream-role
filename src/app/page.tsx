@@ -46,6 +46,16 @@ const homepageFaqs = [
     answer:
       "Today the optimizer is focused on resumes. Cover letter and LinkedIn profile optimization are on the roadmap.",
   },
+  {
+    question: "Does it apply for me automatically?",
+    answer:
+      "No. GetDreamRole finds the roles, drafts the resume, the cover letter and the screening answers, and prefills everything, but you open the employer's own form and click submit. Submitting from a server is the single biggest fraud signal an applicant tracking system looks for, and the bots that do it have shipped wrong work-authorization answers on people's behalf. We also cap how many applications you can send a day, and how often you can apply to the same company, because volume is what gets candidates filtered out.",
+  },
+  {
+    question: "What does the AI cost?",
+    answer:
+      "You bring your own API key, so you pay your provider directly at cost. A full application - fit score, tailored resume, cover letter and screening answers - runs from a fraction of a cent on the cheapest models to about fifteen cents on the most expensive. There is a shared trial key for your first few runs, and the dashboard shows exactly what you have spent this month.",
+  },
 ];
 
 export const metadata = buildMetadata({
