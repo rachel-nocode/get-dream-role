@@ -523,9 +523,27 @@ export type RejectableDraft = {
   }>;
 };
 
+/**
+ * Characters that continue a word for claim matching. Dots and at-signs are
+ * included so a two-letter claim like "AI" or a number like "20" does not
+ * match inside an email address, a domain, a version or a year.
+ */
+const CLAIM_WORD_CHARS = "A-Za-z0-9.@";
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** True when the claim appears as a whole word or phrase, not inside another token. */
 export function containsClaim(text: string, claim: string): boolean {
-  const needle = claim.trim().toLowerCase();
-  return needle.length > 0 && text.toLowerCase().includes(needle);
+  const needle = claim.trim();
+  if (needle.length === 0) return false;
+
+  const pattern = new RegExp(
+    `(?<![${CLAIM_WORD_CHARS}])${escapeRegExp(needle)}(?![${CLAIM_WORD_CHARS}])`,
+    "i",
+  );
+  return pattern.test(text);
 }
 
 function withoutSentencesMentioning(text: string, claim: string): string {

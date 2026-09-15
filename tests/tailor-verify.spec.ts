@@ -6,6 +6,7 @@ import {
   buildFactRegistry,
   computeAtsScore,
   computeMatchScore,
+  containsClaim,
   filterEvidenceIds,
   reassembleResume,
   rejectedClaimsStillPresent,
@@ -405,6 +406,36 @@ test.describe("rejected claims", () => {
     expect(next.changeLog[0].rewritten).toBe(next.changeLog[0].original);
     expect(next.changeLog[0].evidenceIds).toEqual([]);
     expect(rejectedClaimsStillPresent(next, [{ text: "Kafka", status: "rejected" }])).toEqual([]);
+  });
+
+  test("matches a claim only as a whole word, never inside emails, domains or years", () => {
+    expect(containsClaim("Shipped the AI assistant", "AI")).toBe(true);
+    expect(containsClaim("Grew revenue 20% in a year", "20")).toBe(true);
+    expect(containsClaim("jane@openai.com · Berlin", "AI")).toBe(false);
+    expect(containsClaim("Backend Engineer, 2020 to 2023", "20")).toBe(false);
+    expect(containsClaim("Runs on Node.js 20.1", "20")).toBe(false);
+    expect(containsClaim("Worked in IT support", "IT")).toBe(true);
+    expect(containsClaim("Built the commit pipeline", "IT")).toBe(false);
+    expect(containsClaim("Moved services to Node.js", "Node.js")).toBe(true);
+  });
+
+  test("leaves bullets alone when the claim only appears inside another token", () => {
+    const untouched = applyClaimRejection(
+      {
+        ...draft,
+        changeLog: [
+          {
+            bulletId: "b_1_2",
+            original: "Mentored three junior engineers",
+            rewritten: "Mentored three junior engineers, 2020 to 2023",
+            reason: "added dates",
+            evidenceIds: ["b_1_2"],
+          },
+        ],
+      },
+      "20",
+    );
+    expect(untouched.changeLog[0].rewritten).toBe("Mentored three junior engineers, 2020 to 2023");
   });
 
   test("reports a rejected claim that is still in the text", () => {
