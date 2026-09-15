@@ -7,18 +7,25 @@ import {
   answerDraft,
   applicationStatus,
   certificationEntry,
+  changeLogEntry,
   discoveredJobStatus,
   educationEntry,
   entitlementKind,
   entitlementStatus,
+  evidenceMapEntry,
   experienceEntry,
   fitDimensions,
+  flaggedClaim,
+  gapEntry,
   jobPreferences,
   jobQuestion,
   jobSource,
   jobSourceKind,
+  needsHumanEntry,
   projectEntry,
   skillEntry,
+  userConfirmedFact,
+  verifierReport,
 } from "./validators";
 
 export default defineSchema({
@@ -59,6 +66,8 @@ export default defineSchema({
     writingStyle: v.optional(v.string()),
     preferences: jobPreferences,
     answerBank: v.array(answerBankEntry),
+    /** Claims the user confirmed on a draft, so tailoring stops flagging them. */
+    userConfirmedFacts: v.optional(v.array(userConfirmedFact)),
     sourceResumeText: v.string(),
     confirmedAt: v.optional(v.number()),
     createdAt: v.number(),
@@ -149,6 +158,22 @@ export default defineSchema({
     coverLetter: v.string(),
     answerDrafts: v.array(answerDraft),
     summary: v.string(),
+    // Everything below is optional so drafts written before the honest
+    // tailoring pipeline keep validating.
+    changeLog: v.optional(v.array(changeLogEntry)),
+    gaps: v.optional(v.array(gapEntry)),
+    flaggedClaims: v.optional(v.array(flaggedClaim)),
+    evidenceMap: v.optional(v.array(evidenceMapEntry)),
+    needsHuman: v.optional(v.array(needsHumanEntry)),
+    verifierReport: v.optional(verifierReport),
+    provider: v.optional(aiProvider),
+    model: v.optional(v.string()),
+    inputTokens: v.optional(v.number()),
+    outputTokens: v.optional(v.number()),
+    costUsd: v.optional(v.number()),
+    approvedAt: v.optional(v.number()),
+    /** When the profile this draft was built from was last edited. */
+    profileSnapshotAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

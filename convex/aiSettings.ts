@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import {
   MutationCtx,
   QueryCtx,
@@ -8,7 +9,13 @@ import {
   mutation,
   query,
 } from "./_generated/server";
-import { HOUSE_MODEL, HOUSE_PROVIDER, defaultModelFor, findModel } from "./ai/providers";
+import {
+  HOUSE_MODEL,
+  HOUSE_PROVIDER,
+  defaultModelFor,
+  findModel,
+  type ProviderId,
+} from "./ai/providers";
 import { aiProvider } from "./validators";
 
 export const SUBMIT_CAP_MIN = 1;
@@ -145,34 +152,38 @@ export const usageThisMonth = query({
 
 /**
  * Which provider and model a generation call would use right now, with no key
- * material of any kind. Drives the cost estimates shown before a run.
+ * material of any kind. Drives every cost estimate shown before a run.
  */
-export const resolvedModel = query({
-  args: {},
-  handler: async (ctx) => {
-    const userId = await requireUserId(ctx);
-    const settings = await ctx.db
-      .query("aiSettings")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
+export async function resolveModelForUser(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+): Promise<{ provider: ProviderId; model: string; usingHouseKey: boolean }> {
+  const settings = await ctx.db
+    .query("aiSettings")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .first();
+
+  if (settings) {
+    const key = await ctx.db
+      .query("apiKeys")
+      .withIndex("by_user_provider", (q) =>
+        q.eq("userId", userId).eq("provider", settings.provider),
+      )
       .first();
 
-    if (settings) {
-      const key = await ctx.db
-        .query("apiKeys")
-        .withIndex("by_user_provider", (q) =>
-          q.eq("userId", userId).eq("provider", settings.provider),
-        )
-        .first();
-
-      if (key) {
-        const model =
-          findModel(settings.provider, settings.model) ?? defaultModelFor(settings.provider);
-        return { provider: settings.provider, model: model.id, usingHouseKey: false };
-      }
+    if (key) {
+      const model =
+        findModel(settings.provider, settings.model) ?? defaultModelFor(settings.provider);
+      return { provider: settings.provider, model: model.id, usingHouseKey: false };
     }
+  }
 
-    return { provider: HOUSE_PROVIDER, model: HOUSE_MODEL, usingHouseKey: true };
-  },
+  return { provider: HOUSE_PROVIDER, model: HOUSE_MODEL, usingHouseKey: true };
+}
+
+export const resolvedModel = query({
+  args: {},
+  handler: async (ctx) => await resolveModelForUser(ctx, await requireUserId(ctx)),
 });
 
 /** The daily scoring budget in force for a user, defaults included. */

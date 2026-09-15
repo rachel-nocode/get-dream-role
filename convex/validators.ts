@@ -170,11 +170,100 @@ export const jobQuestion = v.object({
 
 export type JobQuestion = Infer<typeof jobQuestion>;
 
+/** How much we trust one screening answer: the bank is high, a draft is medium. */
+export const answerConfidence = v.union(
+  v.literal("high"),
+  v.literal("medium"),
+  v.literal("low"),
+);
+
 export const answerDraft = v.object({
   question: v.string(),
   answer: v.string(),
   required: v.boolean(),
+  confidence: v.optional(answerConfidence),
+  /** Answer bank key the answer was copied from, when it came from there. */
+  sourceKey: v.optional(v.string()),
 });
+
+// --- Tailoring (honest apply kit) -------------------------------------------
+
+/** How well a profile fact covers one posting requirement. */
+export const evidenceStrength = v.union(
+  v.literal("direct"),
+  v.literal("analogous"),
+  v.literal("transferable"),
+  v.literal("none"),
+);
+
+export const gapSeverity = v.union(v.literal("required"), v.literal("preferred"));
+
+export const flaggedClaimStatus = v.union(
+  v.literal("pending"),
+  v.literal("confirmed"),
+  v.literal("rejected"),
+);
+
+/** One bullet before and after the rewrite, with the facts it cites. */
+export const changeLogEntry = v.object({
+  bulletId: v.optional(v.string()),
+  original: v.string(),
+  rewritten: v.string(),
+  reason: v.string(),
+  evidenceIds: v.array(v.string()),
+});
+
+/** Something the posting asks for that the profile does not support. */
+export const gapEntry = v.object({
+  requirement: v.string(),
+  severity: gapSeverity,
+  suggestion: v.string(),
+});
+
+/** A term or number the tailored text introduced that the profile lacks. */
+export const flaggedClaim = v.object({
+  id: v.string(),
+  text: v.string(),
+  reason: v.string(),
+  status: flaggedClaimStatus,
+});
+
+export const evidenceMapEntry = v.object({
+  requirement: v.string(),
+  evidenceIds: v.array(v.string()),
+  strength: evidenceStrength,
+});
+
+/** A screening question only the user can answer honestly. */
+export const needsHumanEntry = v.object({
+  question: v.string(),
+  reason: v.string(),
+});
+
+export const verifierReport = v.object({
+  passed: v.boolean(),
+  issues: v.array(v.string()),
+});
+
+/** A flagged claim the user confirmed, so it is never flagged again. */
+export const userConfirmedFact = v.object({
+  id: v.string(),
+  text: v.string(),
+  confirmedAt: v.number(),
+});
+
+export type AnswerConfidence = Infer<typeof answerConfidence>;
+export type AnswerDraft = Infer<typeof answerDraft>;
+export type EvidenceStrength = Infer<typeof evidenceStrength>;
+export type GapSeverity = Infer<typeof gapSeverity>;
+export type FlaggedClaimStatus = Infer<typeof flaggedClaimStatus>;
+export type ChangeLogEntry = Infer<typeof changeLogEntry>;
+export type GapEntry = Infer<typeof gapEntry>;
+export type FlaggedClaim = Infer<typeof flaggedClaim>;
+export type EvidenceMapEntry = Infer<typeof evidenceMapEntry>;
+export type NeedsHumanEntry = Infer<typeof needsHumanEntry>;
+export type VerifierReport = Infer<typeof verifierReport>;
+export type UserConfirmedFact = Infer<typeof userConfirmedFact>;
 
 export const aiProvider = v.union(
   v.literal("anthropic"),

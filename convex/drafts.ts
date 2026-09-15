@@ -1,215 +1,165 @@
-"use node";
+/**
+ * What the user does with a generated apply kit: price it before it runs,
+ * settle the claims the verifier flagged, and approve it once nothing is
+ * outstanding. Generation itself lives in `ai/draftActions.ts`, which needs
+ * the Node runtime; everything here is a plain query or mutation.
+ */
 
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
-import { Doc, Id } from "./_generated/dataModel";
-import { ActionCtx, action } from "./_generated/server";
-import { generateJson, type JsonSchema } from "./ai/client";
-import { resolveUserModel } from "./ai/resolve";
+import type { Doc, Id } from "./_generated/dataModel";
+import { MutationCtx, QueryCtx, mutation, query } from "./_generated/server";
+import { PROVIDERS, estimateCostPerApplication, findModel } from "./ai/providers";
+import { NEEDS_ANSWER, computeAtsScore } from "./ai/tailor";
+import { resolveModelForUser } from "./aiSettings";
+import type { UserConfirmedFact } from "./validators";
 
-type GeneratedDraft = {
-  atsScore: number;
-  matchScore: number;
-  missingKeywords: string[];
-  presentKeywords: string[];
-  tailoredBullets: string[];
-  optimizedResume: string;
-  coverLetter: string;
-  answerDrafts: Array<{
-    question: string;
-    answer: string;
-    required: boolean;
-  }>;
-  summary: string;
-};
+const claimResolution = v.union(v.literal("confirmed"), v.literal("rejected"));
 
-const DRAFT_SCHEMA: JsonSchema = {
-  type: "object",
-  properties: {
-    atsScore: { type: "number", description: "ATS compatibility from 0 to 100" },
-    matchScore: { type: "number", description: "Keyword match from 0 to 100" },
-    missingKeywords: { type: "array", items: { type: "string" } },
-    presentKeywords: { type: "array", items: { type: "string" } },
-    tailoredBullets: { type: "array", items: { type: "string" } },
-    optimizedResume: { type: "string" },
-    coverLetter: { type: "string" },
-    answerDrafts: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          question: { type: "string" },
-          answer: { type: "string" },
-          required: { type: "boolean" },
-        },
-      },
-    },
-    summary: { type: "string" },
-  },
-};
-
-const SYSTEM_PROMPT = `You are GetDreamRole Apply Copilot. Generate application materials that improve fit while staying honest.
-
-Rules:
-- Never fabricate employers, degrees, titles, metrics, or skills.
-- If a needed detail is absent, phrase it as a suggested placeholder the user should verify.
-- Keep the cover letter human, specific, and under 260 words.
-- Draft application answers only for questions provided by the job board.
-- Scores are integers from 0 to 100.`;
-
-async function requireUserId(ctx: ActionCtx) {
+async function requireUserId(ctx: QueryCtx | MutationCtx) {
   const userId = await getAuthUserId(ctx);
   if (userId === null) {
-    throw new Error("Sign in to generate an application pack.");
+    throw new Error("Sign in to work on an application.");
   }
   return userId;
 }
 
-function asStringArray(value: unknown) {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-}
-
-function clampScore(value: unknown) {
-  const score = Number(value);
-  if (!Number.isFinite(score)) return 0;
-  return Math.max(0, Math.min(100, Math.round(score)));
-}
-
-function normalizeGeneratedDraft(value: unknown): GeneratedDraft {
-  if (typeof value !== "object" || value === null) {
-    throw new Error("The model returned an invalid draft.");
+async function ownedDraft(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  draftId: Id<"applicationDrafts">,
+): Promise<Doc<"applicationDrafts">> {
+  const draft = await ctx.db.get(draftId);
+  if (!draft || draft.userId !== userId) {
+    throw new Error("Could not find that draft.");
   }
-
-  const record = value as Record<string, unknown>;
-  const answerDrafts = Array.isArray(record.answerDrafts)
-    ? record.answerDrafts
-        .filter((item): item is Record<string, unknown> => {
-          return typeof item === "object" && item !== null;
-        })
-        .map((item) => ({
-          question: String(item.question ?? ""),
-          answer: String(item.answer ?? ""),
-          required: Boolean(item.required),
-        }))
-        .filter((item) => item.question.length > 0 || item.answer.length > 0)
-    : [];
-
-  return {
-    atsScore: clampScore(record.atsScore),
-    matchScore: clampScore(record.matchScore),
-    missingKeywords: asStringArray(record.missingKeywords),
-    presentKeywords: asStringArray(record.presentKeywords),
-    tailoredBullets: asStringArray(record.tailoredBullets),
-    optimizedResume: String(record.optimizedResume ?? ""),
-    coverLetter: String(record.coverLetter ?? ""),
-    answerDrafts,
-    summary: String(record.summary ?? ""),
-  };
+  return draft;
 }
 
-function buildUserPrompt(args: {
-  resumeSource: string;
-  jobTitle: string;
-  company: string;
-  location?: string;
-  description: string;
-  questions: Array<{ label: string; required: boolean }>;
-}) {
-  return `JOB
-Title: ${args.jobTitle}
-Company: ${args.company}
-Location: ${args.location ?? "Not specified"}
-
-Description:
-${args.description}
-
-Questions:
-${JSON.stringify(args.questions)}
-
-Candidate resume/source material:
-${args.resumeSource}`;
-}
-
-export const generateForJob = action({
-  args: {
-    jobImportId: v.id("jobImports"),
-    resumeSource: v.optional(v.string()),
-  },
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ draftId: Id<"applicationDrafts">; applicationId: Id<"applications"> }> => {
+/** What the full pipeline would cost on the model this user is set up with. */
+export const estimate = query({
+  args: { jobImportId: v.id("jobImports") },
+  handler: async (ctx, args) => {
     const userId = await requireUserId(ctx);
-    const job = (await ctx.runQuery(internal.jobs.getForUser, {
-      userId,
-      jobImportId: args.jobImportId,
-    })) as Doc<"jobImports"> | null;
+    const job = await ctx.db.get(args.jobImportId);
+    if (!job || job.userId !== userId) return null;
 
-    if (!job) {
-      throw new Error("Could not find that imported job.");
+    const resolved = await resolveModelForUser(ctx, userId);
+    const model = findModel(resolved.provider, resolved.model);
+
+    return {
+      provider: resolved.provider,
+      model: resolved.model,
+      label: `${PROVIDERS[resolved.provider].label} ${model?.label ?? resolved.model}`,
+      costUsd: model ? estimateCostPerApplication(model) : null,
+      usingHouseKey: resolved.usingHouseKey,
+      questions: job.questions.length,
+    };
+  },
+});
+
+function nextConfirmedFacts(
+  existing: UserConfirmedFact[],
+  text: string,
+  now: number,
+): UserConfirmedFact[] {
+  const already = existing.some((fact) => fact.text.toLowerCase() === text.toLowerCase());
+  if (already) return existing;
+  return [...existing, { id: `ucf_${existing.length + 1}`, text, confirmedAt: now }];
+}
+
+/**
+ * Confirming a claim is the user vouching for it, so it joins the profile as a
+ * fact of their own and the verifier stops flagging it on the next draft.
+ */
+export const resolveClaim = mutation({
+  args: {
+    draftId: v.id("applicationDrafts"),
+    claimId: v.string(),
+    status: claimResolution,
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const draft = await ownedDraft(ctx, userId, args.draftId);
+
+    const claims = draft.flaggedClaims ?? [];
+    const claim = claims.find((entry) => entry.id === args.claimId);
+    if (!claim) {
+      throw new Error("That claim is not on this draft.");
     }
 
-    const profile = (await ctx.runQuery(internal.draftSupport.getProfileForUser, {
-      userId,
-    })) as Doc<"profiles"> | null;
-    const resumeSource: string = (args.resumeSource ?? profile?.resumeText ?? "").trim();
-    if (!resumeSource) {
-      throw new Error("Add resume text before generating a draft.");
-    }
+    const now = Date.now();
+    const updated = claims.map((entry) =>
+      entry.id === args.claimId ? { ...entry, status: args.status } : entry,
+    );
+    const pending = updated.filter((entry) => entry.status === "pending").length;
 
-    if (process.env.APPLY_COPILOT_REQUIRE_SUBSCRIPTION === "true") {
-      const hasAccess = await ctx.runQuery(internal.draftSupport.hasApplyCopilotAccess, {
-        userId,
-      });
-      if (!hasAccess) {
-        throw new Error("Apply Copilot requires an active subscription.");
+    await ctx.db.patch(draft._id, {
+      flaggedClaims: updated,
+      atsScore: computeAtsScore(draft.verifierReport?.issues.length ?? 0, pending),
+      updatedAt: now,
+    });
+
+    if (args.status === "confirmed") {
+      const profile = await ctx.db
+        .query("careerProfiles")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .first();
+
+      if (profile) {
+        await ctx.db.patch(profile._id, {
+          userConfirmedFacts: nextConfirmedFacts(
+            profile.userConfirmedFacts ?? [],
+            claim.text,
+            now,
+          ),
+          updatedAt: now,
+        });
       }
     }
 
-    const resolved = await resolveUserModel(ctx, userId);
-    const completion = await generateJson<unknown>({
-      provider: resolved.provider,
-      model: resolved.model,
-      apiKey: resolved.apiKey,
-      system: SYSTEM_PROMPT,
-      user: buildUserPrompt({
-        resumeSource,
-        jobTitle: job.title,
-        company: job.company,
-        location: job.location,
-        description: job.description,
-        questions: job.questions.map((question: Doc<"jobImports">["questions"][number]) => ({
-          label: question.label,
-          required: question.required,
-        })),
-      }),
-      schema: DRAFT_SCHEMA,
-      schemaName: "application_draft",
-      maxTokens: 4096,
-      temperature: 0.35,
-    });
+    return { pending };
+  },
+});
 
-    const saved = (await ctx.runMutation(internal.draftSupport.saveGeneratedDraft, {
-      userId,
-      jobImportId: args.jobImportId,
-      resumeSource,
-      ...normalizeGeneratedDraft(completion.data),
-    })) as { draftId: Id<"applicationDrafts">; applicationId: Id<"applications"> };
+/** Screening questions the kit still hands back to the user. */
+function unansweredQuestions(draft: Doc<"applicationDrafts">): string[] {
+  return (draft.needsHuman ?? [])
+    .filter((entry) => {
+      const answer = draft.answerDrafts.find((item) => item.question === entry.question);
+      return answer !== undefined && answer.answer.trim() === NEEDS_ANSWER;
+    })
+    .map((entry) => entry.question);
+}
 
-    await ctx.runMutation(internal.aiSettings.recordUsage, {
-      userId,
-      provider: completion.provider,
-      model: completion.model,
-      purpose: "tailor",
-      inputTokens: completion.usage.inputTokens,
-      outputTokens: completion.usage.outputTokens,
-      costUsd: completion.costUsd,
-      applicationId: saved.applicationId,
-    });
+function blockingMessage(pending: number, unanswered: number): string {
+  const parts = [
+    pending > 0 ? `${pending} flagged claim${pending === 1 ? "" : "s"} to confirm or reject` : "",
+    unanswered > 0 ? `${unanswered} question${unanswered === 1 ? "" : "s"} only you can answer` : "",
+  ].filter((part) => part.length > 0);
 
-    return saved;
+  return `Finish the review first: ${parts.join(" and ")}.`;
+}
+
+export const approve = mutation({
+  args: { draftId: v.id("applicationDrafts") },
+  handler: async (ctx, args) => {
+    const userId = await requireUserId(ctx);
+    const draft = await ownedDraft(ctx, userId, args.draftId);
+
+    const pending = (draft.flaggedClaims ?? []).filter(
+      (claim) => claim.status === "pending",
+    ).length;
+    const unanswered = unansweredQuestions(draft).length;
+
+    if (pending > 0 || unanswered > 0) {
+      throw new Error(blockingMessage(pending, unanswered));
+    }
+
+    const now = Date.now();
+    // TODO(Phase 4): move the application to "approved" and write the
+    // activity log entry once the extended status set lands.
+    await ctx.db.patch(draft._id, { approvedAt: now, updatedAt: now });
+    return now;
   },
 });
