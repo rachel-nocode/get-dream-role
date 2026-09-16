@@ -13,7 +13,17 @@ export type ParsedJobUrl =
       apiUrl: string;
       applyUrl: string;
       region: "global" | "eu";
+    }
+  | {
+      source: "ashby";
+      org: string;
+      jobId: string;
+      apiUrl: string;
+      applyUrl: string;
     };
+
+export const UNSUPPORTED_JOB_URL_MESSAGE =
+  "Supports Greenhouse, Lever, and Ashby job URLs.";
 
 export function parseJobUrl(input: string): ParsedJobUrl {
   let url: URL;
@@ -21,7 +31,7 @@ export function parseJobUrl(input: string): ParsedJobUrl {
   try {
     url = new URL(input.trim());
   } catch {
-    throw new Error("Paste a valid Greenhouse or Lever job URL.");
+    throw new Error("Paste a valid job URL. " + UNSUPPORTED_JOB_URL_MESSAGE);
   }
 
   const hostname = url.hostname.toLowerCase();
@@ -65,5 +75,20 @@ export function parseJobUrl(input: string): ParsedJobUrl {
     };
   }
 
-  throw new Error("V1 supports Greenhouse and Lever job URLs only.");
+  if (hostname === "jobs.ashbyhq.com") {
+    const [org, jobId] = parts;
+    if (!org || !jobId) {
+      throw new Error("That Ashby URL is missing an org or job id.");
+    }
+
+    return {
+      source: "ashby",
+      org,
+      jobId,
+      apiUrl: `https://api.ashbyhq.com/posting-api/job-board/${org}`,
+      applyUrl: url.toString(),
+    };
+  }
+
+  throw new Error(UNSUPPORTED_JOB_URL_MESSAGE);
 }

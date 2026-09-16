@@ -1,91 +1,109 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { Download, ExternalLink, Files, Save } from "lucide-react";
+import Link from "next/link";
+import { useAction, useMutation, useQuery } from "convex/react";
+import { Download, ExternalLink } from "lucide-react";
+import ActivityTimeline, {
+  latestFollowupFrom,
+} from "@/components/applications/ActivityTimeline";
+import AnswersPanel from "@/components/applications/AnswersPanel";
+import CopyButton from "@/components/applications/CopyButton";
+import GenerateBar from "@/components/applications/GenerateBar";
+import ResumeDiff from "@/components/applications/ResumeDiff";
+import ReviewPanel, { type ClaimResolution } from "@/components/applications/ReviewPanel";
+import SubmitPanel from "@/components/applications/SubmitPanel";
 import AppShell from "@/components/app/AppShell";
-import {
-  ApplicationStatus,
-  StatusPill,
-  applicationStatusOptions,
-} from "@/components/app/StatusPill";
+import { StatusPill, type ManualStatus } from "@/components/app/StatusPill";
 import { api } from "@convex/_generated/api";
-import { Id } from "@convex/_generated/dataModel";
+import type { Doc, Id } from "@convex/_generated/dataModel";
+import { PROVIDERS, findModel, formatUsd } from "@convex/ai/providers";
+import { NEEDS_ANSWER, buildFactRegistry, factTextById } from "@convex/ai/tailor";
+import { downloadTextFile, fileNameFor } from "@/lib/resumeExport";
 
-const tabs = ["summary", "resume", "cover", "questions", "submit"] as const;
-type Tab = (typeof tabs)[number];
+const TAB_LABELS = {
+  review: "Review",
+  summary: "Job",
+  resume: "Resume",
+  cover: "Cover letter",
+  questions: "Answers",
+  submit: "Apply kit",
+} as const;
 
-function tabLabel(tab: Tab) {
-  return {
-    summary: "Job",
-    resume: "Resume",
-    cover: "Cover letter",
-    questions: "Answers",
-    submit: "Submit",
-  }[tab];
+type Tab = keyof typeof TAB_LABELS;
+
+const TABS = Object.keys(TAB_LABELS) as Tab[];
+
+type Draft = Doc<"applicationDrafts">;
+
+/** Claims and questions the user still has to settle before approval. */
+function openItemCount(draft: Draft): number {
+  const pending = (draft.flaggedClaims ?? []).filter((claim) => claim.status === "pending").length;
+  const unanswered = (draft.needsHuman ?? []).filter(
+    (entry) =>
+      draft.answerDrafts.find((answer) => answer.question === entry.question)?.answer.trim() ===
+      NEEDS_ANSWER,
+  ).length;
+
+  return pending + unanswered;
 }
 
-function CopyButton({ value }: { value: string }) {
-  const [copied, setCopied] = useState(false);
+function costLine(draft: Draft): string | null {
+  if (!draft.provider || !draft.model) return null;
 
+  const model = findModel(draft.provider, draft.model);
+  const tokens = (draft.inputTokens ?? 0) + (draft.outputTokens ?? 0);
+
+  return `Generated with ${PROVIDERS[draft.provider].label} ${model?.label ?? draft.model} · ${tokens.toLocaleString(
+    "en-US",
+  )} tokens · ${formatUsd(draft.costUsd ?? 0)}`;
+}
+
+function ScoreCard({ label, value }: { label: string; value: string }) {
   return (
-    <button
-      type="button"
-      onClick={async () => {
-        await navigator.clipboard.writeText(value);
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1200);
-      }}
-      className="inline-flex h-9 items-center gap-2 rounded-lg border border-forge-border px-3 text-sm text-forge-text hover:bg-forge-elevated"
-    >
-      <Files className="h-4 w-4" />
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <div className="rounded-lg border border-forge-border bg-forge-surface p-5">
+      <p className="text-sm text-forge-muted">{label}</p>
+      <p className="mt-2 font-display text-3xl font-bold">{value}</p>
+    </div>
   );
 }
 
-export default function ApplicationDetailClient({
-  applicationId,
-}: {
-  applicationId: string;
-}) {
-  const [activeTab, setActiveTab] = useState<Tab>("summary");
+export default function ApplicationDetailClient({ applicationId }: { applicationId: string }) {
+  const [chosenTab, setChosenTab] = useState<Tab | null>(null);
+  const [error, setError] = useState("");
+
   const data = useQuery(api.applications.get, {
     applicationId: applicationId as Id<"applications">,
   });
+  const profile = useQuery(api.careerProfile.get);
+  const estimate = useQuery(
+    api.drafts.estimate,
+    data?.job ? { jobImportId: data.job._id } : "skip",
+  );
+  const activity = useQuery(api.applications.activity, {
+    applicationId: applicationId as Id<"applications">,
+  });
+  const budget = useQuery(api.applications.submitBudget);
+
+  const generateApplyKit = useAction(api.ai.draftActions.generateApplyKit);
+  const regenerateAnswer = useAction(api.ai.draftActions.regenerateAnswer);
+  const draftFollowup = useAction(api.ai.followupActions.draftFollowup);
+  const resolveClaim = useMutation(api.drafts.resolveClaim);
+  const approve = useMutation(api.drafts.approve);
+  const updateAnswer = useMutation(api.careerProfile.updateAnswer);
   const markOpened = useMutation(api.applications.markOpened);
+  const markSubmitted = useMutation(api.applications.markSubmitted);
   const updateStatus = useMutation(api.applications.updateStatus);
+  const addNote = useMutation(api.applications.addNote);
+  const snoozeFollowup = useMutation(api.applications.snoozeFollowup);
 
-  function downloadPacket() {
-    if (!data?.draft || !data.job) return;
-
-    const content = [
-      `${data.job.title} at ${data.job.company}`,
-      "",
-      "RESUME",
-      data.draft.optimizedResume,
-      "",
-      "COVER LETTER",
-      data.draft.coverLetter,
-      "",
-      "ANSWERS",
-      ...data.draft.answerDrafts.map(
-        (answer) => `${answer.question}\n${answer.answer}`,
-      ),
-    ].join("\n\n");
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = "getdreamrole-application-pack.txt";
-    link.click();
-    URL.revokeObjectURL(href);
-  }
-
-  async function openApplyUrl() {
-    if (!data?.job) return;
-    await markOpened({ applicationId: applicationId as Id<"applications"> });
-    window.open(data.job.applyUrl, "_blank", "noopener,noreferrer");
+  async function guard(task: () => Promise<unknown>) {
+    setError("");
+    try {
+      await task();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    }
   }
 
   if (data === undefined) {
@@ -107,6 +125,36 @@ export default function ApplicationDetailClient({
   }
 
   const { application, job, draft } = data;
+  const openItems = draft ? openItemCount(draft) : 0;
+  const tabs = TABS.filter((tab) => tab !== "review" || draft !== null);
+  const activeTab = chosenTab ?? (draft && openItems > 0 ? "review" : "summary");
+  const factText = profile ? factTextById(buildFactRegistry(profile)) : {};
+  const profileConfirmed = profile?.confirmedAt !== undefined;
+
+  function downloadPacket() {
+    if (!draft) return;
+
+    const content = [
+      `${job.title} at ${job.company}`,
+      "",
+      "RESUME",
+      draft.optimizedResume,
+      "",
+      "COVER LETTER",
+      draft.coverLetter,
+      "",
+      "ANSWERS",
+      ...draft.answerDrafts.map((answer) => `${answer.question}\n${answer.answer}`),
+    ].join("\n\n");
+
+    downloadTextFile(fileNameFor(job.company, "application-pack", "txt"), content, "text/plain");
+  }
+
+  async function openApplyUrl() {
+    // Open first: a popup blocker will stop a window opened after an await.
+    window.open(job.applyUrl, "_blank", "noopener,noreferrer");
+    await markOpened({ applicationId: applicationId as Id<"applications"> });
+  }
 
   return (
     <AppShell>
@@ -121,9 +169,17 @@ export default function ApplicationDetailClient({
             <p className="mt-2 text-sm text-forge-muted">
               {job.company} · {job.location || "Remote/unspecified"}
             </p>
+            {draft && costLine(draft) ? (
+              <p className="mt-2 text-xs text-forge-muted">{costLine(draft)}</p>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            <GenerateBar
+              estimate={estimate ?? null}
+              hasDraft={draft !== null}
+              onGenerate={() => guard(() => generateApplyKit({ jobImportId: job._id }))}
+            />
             {draft ? (
               <button
                 type="button"
@@ -136,8 +192,8 @@ export default function ApplicationDetailClient({
             ) : null}
             <button
               type="button"
-              onClick={openApplyUrl}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-forge-accent px-4 text-sm font-semibold text-forge-bg hover:bg-forge-accent-hover"
+              onClick={() => guard(openApplyUrl)}
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-forge-border px-4 text-sm font-semibold text-forge-text hover:bg-forge-elevated"
             >
               <ExternalLink className="h-4 w-4" />
               Open apply form
@@ -145,22 +201,45 @@ export default function ApplicationDetailClient({
           </div>
         </section>
 
+        {error ? (
+          <p className="rounded-lg border border-forge-danger/30 bg-forge-danger/10 px-4 py-3 text-sm text-forge-danger">
+            {error}{" "}
+            {error.toLowerCase().includes("profile") ? (
+              <Link href="/profile" className="font-semibold underline">
+                Go to your profile
+              </Link>
+            ) : null}
+          </p>
+        ) : null}
+
         {draft ? (
           <section className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-forge-border bg-forge-surface p-5">
-              <p className="text-sm text-forge-muted">Match score</p>
-              <p className="mt-2 font-display text-3xl font-bold">{draft.matchScore}%</p>
-            </div>
-            <div className="rounded-lg border border-forge-border bg-forge-surface p-5">
-              <p className="text-sm text-forge-muted">ATS score</p>
-              <p className="mt-2 font-display text-3xl font-bold">{draft.atsScore}%</p>
-            </div>
-            <div className="rounded-lg border border-forge-border bg-forge-surface p-5">
-              <p className="text-sm text-forge-muted">Questions</p>
-              <p className="mt-2 font-display text-3xl font-bold">{job.questions.length}</p>
-            </div>
+            <ScoreCard label="Requirements covered" value={`${draft.matchScore}%`} />
+            <ScoreCard label="ATS readiness" value={`${draft.atsScore}%`} />
+            <ScoreCard label="Left to review" value={String(openItems)} />
           </section>
-        ) : null}
+        ) : (
+          <section className="rounded-lg border border-forge-border bg-forge-surface p-5">
+            <h2 className="font-display text-2xl font-semibold">No apply kit yet</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-forge-muted">
+              Generating reads this posting, matches each requirement to a fact in your profile,
+              then rewrites your own bullets around the ones that match.
+            </p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-forge-muted">
+              Nothing is invented: anything the draft adds that your profile does not support comes
+              back to you as a claim to confirm or reject.
+            </p>
+            {profileConfirmed ? null : (
+              <p className="mt-3 text-sm text-forge-muted">
+                Your master profile is not confirmed yet.{" "}
+                <Link href="/profile" className="text-forge-accent hover:text-forge-accent-hover">
+                  Confirm it first
+                </Link>
+                .
+              </p>
+            )}
+          </section>
+        )}
 
         <section className="rounded-lg border border-forge-border bg-forge-surface">
           <div className="flex gap-2 overflow-x-auto border-b border-forge-border p-2">
@@ -168,25 +247,45 @@ export default function ApplicationDetailClient({
               <button
                 type="button"
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`h-10 rounded-lg px-4 text-sm font-semibold ${
+                onClick={() => setChosenTab(tab)}
+                className={`h-10 shrink-0 rounded-lg px-4 text-sm font-semibold ${
                   activeTab === tab
                     ? "bg-forge-accent text-forge-bg"
                     : "text-forge-muted hover:bg-forge-elevated hover:text-forge-text"
                 }`}
               >
-                {tabLabel(tab)}
+                {TAB_LABELS[tab]}
+                {tab === "review" && openItems > 0 ? ` (${openItems})` : ""}
               </button>
             ))}
           </div>
 
           <div className="p-5">
+            {activeTab === "review" && draft ? (
+              <ReviewPanel
+                draft={draft}
+                onResolveClaim={(claimId: string, status: ClaimResolution) =>
+                  guard(() => resolveClaim({ draftId: draft._id, claimId, status }))
+                }
+                onAnswer={(question: string, sourceKey: string, value: string) =>
+                  guard(async () => {
+                    await updateAnswer({ key: sourceKey, answer: value });
+                    await regenerateAnswer({ draftId: draft._id, question });
+                  })
+                }
+                onRedraft={(question: string) =>
+                  guard(() => regenerateAnswer({ draftId: draft._id, question }))
+                }
+                onApprove={() => guard(() => approve({ draftId: draft._id }))}
+              />
+            ) : null}
+
             {activeTab === "summary" ? (
               <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
                 <div>
-                  <h2 className="font-display text-xl font-semibold">Draft summary</h2>
+                  <h2 className="font-display text-xl font-semibold">Tailored summary</h2>
                   <p className="mt-3 text-sm leading-6 text-forge-muted">
-                    {draft?.summary ?? "Generate a draft from the import page to fill this in."}
+                    {draft?.summary || "Generate the apply kit to fill this in."}
                   </p>
                   {draft ? (
                     <div className="mt-5 flex flex-wrap gap-2">
@@ -206,21 +305,21 @@ export default function ApplicationDetailClient({
                   <pre className="mt-3 max-h-[520px] overflow-auto whitespace-pre-wrap rounded-lg border border-forge-border bg-forge-bg p-4 text-sm leading-6 text-forge-muted">
                     {job.description}
                   </pre>
+                  <h2 className="mt-6 font-display text-xl font-semibold">Activity</h2>
+                  <div className="mt-3">
+                    <ActivityTimeline entries={activity ?? []} />
+                  </div>
                 </div>
               </div>
             ) : null}
 
             {activeTab === "resume" ? (
               draft ? (
-                <div>
-                  <div className="mb-4 flex items-center justify-between gap-3">
-                    <h2 className="font-display text-xl font-semibold">Tailored resume</h2>
-                    <CopyButton value={draft.optimizedResume} />
-                  </div>
-                  <pre className="whitespace-pre-wrap rounded-lg border border-forge-border bg-forge-bg p-4 text-sm leading-6 text-forge-text">
-                    {draft.optimizedResume}
-                  </pre>
-                </div>
+                <ResumeDiff
+                  changeLog={draft.changeLog ?? []}
+                  factText={factText}
+                  resumeText={draft.optimizedResume}
+                />
               ) : (
                 <p className="text-sm text-forge-muted">No resume draft yet.</p>
               )
@@ -243,89 +342,39 @@ export default function ApplicationDetailClient({
             ) : null}
 
             {activeTab === "questions" ? (
-              draft?.answerDrafts.length ? (
-                <div className="space-y-4">
-                  {draft.answerDrafts.map((answer) => (
-                    <div key={answer.question} className="rounded-lg border border-forge-border bg-forge-bg p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold">{answer.question}</p>
-                          <p className="mt-1 text-xs text-forge-muted">
-                            {answer.required ? "Required" : "Optional"}
-                          </p>
-                        </div>
-                        <CopyButton value={answer.answer} />
-                      </div>
-                      <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-forge-text">
-                        {answer.answer}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-forge-muted">
-                  No custom questions were exposed for this posting.
-                </p>
-              )
+              <AnswersPanel answers={draft?.answerDrafts ?? []} />
             ) : null}
 
             {activeTab === "submit" ? (
-              <div className="grid gap-6 lg:grid-cols-[1fr_0.8fr]">
-                <div>
-                  <h2 className="font-display text-xl font-semibold">Assisted submit</h2>
-                  <p className="mt-3 text-sm leading-6 text-forge-muted">
-                    Copy the pieces you want, open the native ATS form, then mark the application when it is done.
-                  </p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    {draft ? <CopyButton value={draft.optimizedResume} /> : null}
-                    {draft ? <CopyButton value={draft.coverLetter} /> : null}
-                    <button
-                      type="button"
-                      onClick={openApplyUrl}
-                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-forge-accent px-3 text-sm font-semibold text-forge-bg hover:bg-forge-accent-hover"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      Open form
-                    </button>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-forge-border bg-forge-bg p-4">
-                  <label className="block text-sm font-semibold text-forge-muted" htmlFor="status">
-                    Status
-                  </label>
-                  <select
-                    id="status"
-                    value={application.status}
-                    onChange={(event) =>
-                      updateStatus({
-                        applicationId: application._id,
-                        status: event.target.value as ApplicationStatus,
-                      })
-                    }
-                    className="mt-2 h-11 w-full rounded-lg border border-forge-border bg-forge-surface px-3 text-sm text-forge-text outline-none focus:border-forge-accent"
-                  >
-                    {applicationStatusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateStatus({
-                        applicationId: application._id,
-                        status: "submitted",
-                      })
-                    }
-                    className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-forge-success/30 bg-forge-success/10 px-4 text-sm font-semibold text-forge-success hover:bg-forge-success/15"
-                  >
-                    <Save className="h-4 w-4" />
-                    Mark submitted
-                  </button>
-                </div>
-              </div>
+              <SubmitPanel
+                status={application.status}
+                company={job.company}
+                draft={draft}
+                tracking={{
+                  nextActionAt: application.nextActionAt ?? null,
+                  nextActionLabel: application.nextActionLabel ?? null,
+                  followupCount: application.followupCount ?? 0,
+                  notes: application.notes ?? "",
+                }}
+                budget={budget ?? null}
+                latestFollowup={latestFollowupFrom(activity)}
+                onOpenApply={() => guard(openApplyUrl)}
+                onMarkSubmitted={async () => {
+                  await markSubmitted({ applicationId: application._id });
+                }}
+                onDraftFollowup={async () => {
+                  await draftFollowup({ applicationId: application._id });
+                }}
+                onSnooze={async (days: number) => {
+                  await snoozeFollowup({ applicationId: application._id, days });
+                }}
+                onAddNote={async (text: string) => {
+                  await addNote({ applicationId: application._id, text });
+                }}
+                onStatusChange={(status: ManualStatus) =>
+                  guard(() => updateStatus({ applicationId: application._id, status }))
+                }
+              />
             ) : null}
           </div>
         </section>

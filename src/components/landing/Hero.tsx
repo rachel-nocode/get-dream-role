@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 const platformPills = ["Greenhouse", "Workday", "Lever"];
-const trustPoints = ["Free ATS score", "No subscription", "PDF or pasted resume"];
+const trustPoints = ["Free ATS score", "No subscription", "No bots, ever"];
 
 const testimonials = [
   {
@@ -62,30 +62,37 @@ export default function Hero() {
             className="animate-fade-up font-display text-forge-accent text-xs tracking-[0.2em] uppercase"
             style={{ animationDelay: "0ms" }}
           >
-            Free ATS resume scan
+            Find. Tailor. Apply. Track.
           </p>
 
           <h1
             className="animate-fade-up font-display text-4xl sm:text-5xl md:text-7xl font-bold leading-tight text-forge-text"
             style={{ animationDelay: "120ms" }}
           >
-            ATS resume optimizer
+            Apply to the jobs
             <br />
-            built to pass the filter.
+            worth your time.
           </h1>
 
           <h2
             className="animate-fade-up font-display text-xl md:text-2xl text-forge-text/90 font-medium max-w-xl leading-snug"
             style={{ animationDelay: "200ms" }}
           >
-            Get a score, keyword gaps, and bullet rewrites tuned for Greenhouse, Workday, Lever, iCIMS, and Taleo.
+            GetDreamRole pulls roles from the boards you watch, tailors your resume for each one with every claim checked against your own history, and tracks what happens next.
           </h2>
 
           <p
             className="animate-fade-up text-forge-muted text-lg max-w-xl leading-relaxed"
             style={{ animationDelay: "280ms" }}
           >
-            Upload your resume, paste the job post, and ship a cleaner version before the application tab gets cold.
+            You click submit yourself, in your own browser. Nothing is invented, and nothing is ever sent on your behalf.
+          </p>
+
+          <p
+            className="animate-fade-up text-forge-text text-base max-w-xl leading-relaxed font-medium"
+            style={{ animationDelay: "320ms" }}
+          >
+            Bring your own AI key. A full application costs pennies, not a subscription.
           </p>
 
           <div

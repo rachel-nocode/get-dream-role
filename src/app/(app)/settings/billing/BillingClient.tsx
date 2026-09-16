@@ -110,6 +110,11 @@ export default function BillingClient() {
             </button>
           </div>
         </section>
+
+        <p className="max-w-3xl text-sm leading-6 text-forge-muted">
+          AI usage is billed by your provider through the key you add in Settings &rarr; AI.
+          Plans cover the product, not tokens.
+        </p>
       </div>
     </AppShell>
   );

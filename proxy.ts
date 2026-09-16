@@ -9,8 +9,10 @@ import {
 const isSignInPage = createRouteMatcher(["/sign-in"]);
 const isProtectedRoute = createRouteMatcher([
   "/dashboard",
-  "/jobs/import",
+  "/profile",
+  "/jobs(.*)",
   "/applications(.*)",
+  "/settings/ai",
   "/settings/billing",
 ]);
 

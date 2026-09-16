@@ -5,21 +5,27 @@ import { motion } from "framer-motion";
 const steps = [
   {
     num: "01",
-    title: "Select ATS Target",
+    title: "Profile",
     description:
-      "Choose the hiring platform the company uses so the engine can calibrate its optimization strategy.",
+      "Paste your resume once. It becomes a registry of facts with ids, plus your answers to the screening questions every form asks.",
   },
   {
     num: "02",
-    title: "Paste Job Description",
+    title: "Discover",
     description:
-      "Provide the target role requirements. The system extracts keywords, qualifications, and ranking signals.",
+      "Name the company boards and remote feeds you watch. A daily scan pulls new postings, dedupes them, and scores the fit.",
   },
   {
     num: "03",
-    title: "Upload Resume",
+    title: "Tailor & review",
     description:
-      "Drop your PDF and let the engine parse, score, and rewrite your resume for maximum compatibility.",
+      "Each posting gets a resume, a cover letter and screening answers built only from facts you already have. Anything new comes back to you to confirm.",
+  },
+  {
+    num: "04",
+    title: "Apply & track",
+    description:
+      "Copy the answers, open the employer's own form, and click submit yourself. The tracker follows it to the offer, ghosting or no.",
   },
 ];
 
@@ -44,12 +50,12 @@ export default function HowItWorks() {
           viewport={{ once: true, margin: "-80px" }}
           className="font-display text-3xl font-bold text-forge-text"
         >
-          Three steps to a stronger resume
+          Four steps from posting to offer
         </motion.h2>
 
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-0 relative">
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-0 relative">
           {/* Connecting line — desktop only */}
-          <div className="hidden md:block absolute top-6 left-[16.67%] right-[16.67%] h-px border-t border-dashed border-forge-border" />
+          <div className="hidden lg:block absolute top-6 left-[12.5%] right-[12.5%] h-px border-t border-dashed border-forge-border" />
 
           {steps.map((step, i) => (
             <motion.div
@@ -59,7 +65,7 @@ export default function HowItWorks() {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: "-80px" }}
-              className="relative flex flex-col items-start md:items-center text-left md:text-center px-0 md:px-8"
+              className="relative flex flex-col items-start lg:items-center text-left lg:text-center px-0 lg:px-6"
             >
               <div className="relative z-10 w-12 h-12 rounded-full border-2 border-forge-accent bg-forge-bg flex items-center justify-center font-display text-sm font-bold text-forge-accent">
                 {step.num}

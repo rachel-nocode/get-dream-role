@@ -39,12 +39,22 @@ const homepageFaqs = [
   {
     question: "Is my resume data secure?",
     answer:
-      "Your resume is processed in memory and is not stored after analysis is complete. We do not sell or share your personal information.",
+      "The free checker processes your resume in memory and does not keep it. If you sign in and build a master profile, the resume text you paste and the facts parsed from it are stored in your account so the agent can cite them, and you can delete that profile from the Profile page at any time. Your AI key is encrypted at rest and only decrypted inside the backend call that uses it. We do not sell or share your personal information.",
   },
   {
     question: "Can I use GetDreamRole for cover letters or LinkedIn?",
     answer:
       "Today the optimizer is focused on resumes. Cover letter and LinkedIn profile optimization are on the roadmap.",
+  },
+  {
+    question: "Does it apply for me automatically?",
+    answer:
+      "No. GetDreamRole finds the roles, drafts the resume, the cover letter and the screening answers, and prefills everything, but you open the employer's own form and click submit. Submitting from a server is the single biggest fraud signal an applicant tracking system looks for, and the bots that do it have shipped wrong work-authorization answers on people's behalf. We also cap how many applications you can send a day, and how often you can apply to the same company, because volume is what gets candidates filtered out.",
+  },
+  {
+    question: "What does the AI cost?",
+    answer:
+      "You bring your own API key, so you pay your provider directly at cost. A full application - fit score, tailored resume, cover letter and screening answers - runs from a fraction of a cent on the cheapest models to about fifteen cents on the most expensive. There is a shared trial key for your first few runs, and the dashboard shows exactly what you have spent this month.",
   },
 ];
 

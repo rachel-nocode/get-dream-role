@@ -29,9 +29,23 @@ test.describe("job URL parsing", () => {
     });
   });
 
+  test("parses Ashby job URLs", () => {
+    const parsed = parseJobUrl(
+      "https://jobs.ashbyhq.com/acme/1f3b8a52-2c4d-4f0a-9c2e-5d1a8b7c6e40",
+    );
+
+    expect(parsed).toMatchObject({
+      source: "ashby",
+      org: "acme",
+      jobId: "1f3b8a52-2c4d-4f0a-9c2e-5d1a8b7c6e40",
+      apiUrl: "https://api.ashbyhq.com/posting-api/job-board/acme",
+      applyUrl: "https://jobs.ashbyhq.com/acme/1f3b8a52-2c4d-4f0a-9c2e-5d1a8b7c6e40",
+    });
+  });
+
   test("rejects unsupported job URLs", () => {
     expect(() => parseJobUrl("https://example.com/jobs/123")).toThrow(
-      "V1 supports Greenhouse and Lever job URLs only.",
+      "Supports Greenhouse, Lever, and Ashby job URLs.",
     );
   });
 });

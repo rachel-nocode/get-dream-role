@@ -4,14 +4,24 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthLoading, Authenticated, Unauthenticated } from "convex/react";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { Briefcase, CreditCard, FilePlus2, LayoutDashboard, LogOut } from "lucide-react";
+import {
+  Briefcase,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Search,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import clsx from "clsx";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/jobs/import", label: "Import", icon: FilePlus2 },
+  { href: "/profile", label: "Profile", icon: UserRound },
+  { href: "/jobs", label: "Jobs", icon: Search },
   { href: "/applications", label: "Applications", icon: Briefcase },
+  { href: "/settings/ai", label: "AI", icon: Sparkles },
   { href: "/settings/billing", label: "Billing", icon: CreditCard },
 ];
 
